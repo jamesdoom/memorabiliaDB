@@ -1,5 +1,4 @@
-// memorabilia-client\src\components\CardModal.tsx
-
+import { useState } from "react";
 import { updateCard, updateCardStatus, uploadImage } from "../api";
 import type { Card } from "../types/card";
 
@@ -10,7 +9,7 @@ type Props = {
   setUploading: (v: boolean) => void;
   isFlipped: boolean;
   setIsFlipped: (v: boolean | ((prev: boolean) => boolean)) => void;
-  loadCards: () => void;
+  loadCards: () => Promise<void>;
 };
 
 export default function CardModal({
@@ -22,17 +21,18 @@ export default function CardModal({
   setIsFlipped,
   loadCards,
 }: Props) {
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [undoing, setUndoing] = useState(false);
+  const busy = uploading || undoing;
+
   return (
     <div className="modalOverlay" onClick={() => setSelectedCard(null)}>
       <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-        {/* CLOSE */}
         <button className="modalClose" onClick={() => setSelectedCard(null)}>
-          ✕
+          X
         </button>
 
-        {/* IMAGE + ACTIONS */}
         <div className="modalTop">
-          {/* IMAGE */}
           <div className="cardFlipContainer">
             <div className={`cardFlipper ${isFlipped ? "flipped" : ""}`}>
               <div className="cardFront">
@@ -53,25 +53,29 @@ export default function CardModal({
             </div>
           </div>
 
-          {/* ✅ CLEAN BUTTON ROW */}
           <div className="modalActionsRow">
             <button
               className="primaryButton"
+              disabled={busy}
               onClick={() => setIsFlipped((prev) => !prev)}
             >
-              🔄 Flip
+              Flip
             </button>
 
-            <label className="uploadButton cleanUpload">
-              📸 Upload
+            <label
+              className={`uploadButton cleanUpload ${busy ? "disabled" : ""}`}
+            >
+              Upload
               <input
                 type="file"
                 accept="image/*"
+                disabled={busy}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
 
                   setUploading(true);
+                  setActionError(null);
 
                   try {
                     const imageUrl = await uploadImage(file);
@@ -84,8 +88,16 @@ export default function CardModal({
 
                     setSelectedCard(updatedCard);
                     await loadCards();
+                  } catch (error) {
+                    console.error("Failed to upload card image:", error);
+                    setActionError(
+                      error instanceof Error
+                        ? error.message
+                        : "Failed to upload image",
+                    );
                   } finally {
                     setUploading(false);
+                    e.target.value = "";
                   }
                 }}
               />
@@ -94,26 +106,45 @@ export default function CardModal({
             {card.status !== "NEW" && (
               <button
                 className="secondaryButton"
+                disabled={busy}
                 onClick={async () => {
-                  await updateCardStatus(card.id, "NEW");
-                  await loadCards();
-                  setSelectedCard(null);
+                  setUndoing(true);
+                  setActionError(null);
+
+                  try {
+                    await updateCardStatus(card.id, "NEW");
+                    await loadCards();
+                    setSelectedCard(null);
+                  } catch (error) {
+                    console.error("Failed to undo status:", error);
+                    setActionError(
+                      error instanceof Error
+                        ? error.message
+                        : "Failed to update status",
+                    );
+                  } finally {
+                    setUndoing(false);
+                  }
                 }}
               >
-                ↩ Undo
+                {undoing ? "Saving..." : "Undo"}
               </button>
             )}
           </div>
 
-          {/* SPINNER */}
           {uploading && (
             <div className="uploadSpinnerContainer">
               <div className="uploadSpinner"></div>
             </div>
           )}
+
+          {actionError && (
+            <p className="modalError" role="alert">
+              {actionError}
+            </p>
+          )}
         </div>
 
-        {/* INFO */}
         <div className="modalInfo">
           <h2 className="modalTitle">{card.playerName}</h2>
           <p className="modalSubtitle">{card.title}</p>

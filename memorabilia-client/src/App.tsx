@@ -17,6 +17,7 @@ function App() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<CardStatus | "">("");
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -82,6 +83,7 @@ function App() {
 
   const loadCards = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
 
     try {
       const response = await fetchCards(buildQuery());
@@ -90,6 +92,9 @@ function App() {
       setSummary(response.summary);
     } catch (error) {
       console.error("Failed to load cards:", error);
+      setLoadError(
+        error instanceof Error ? error.message : "Failed to load cards",
+      );
     } finally {
       setLoading(false);
     }
@@ -189,6 +194,15 @@ function App() {
               {loading && (
                 <div className="uploadSpinnerContainer">
                   <div className="uploadSpinner"></div>
+                </div>
+              )}
+
+              {loadError && (
+                <div className="inlineAlert" role="alert">
+                  <span>{loadError}</span>
+                  <button type="button" onClick={loadCards}>
+                    Retry
+                  </button>
                 </div>
               )}
 

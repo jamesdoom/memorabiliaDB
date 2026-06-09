@@ -485,6 +485,36 @@ button:hover {
   background: var(--yankees-blue);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.inlineAlert {
+  width: 100%;
+  max-width: 700px;
+  margin: 16px auto;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #7f1d1d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inlineAlert button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: #991b1b;
+}
+
+.inlineAlert button:hover {
+  background: #7f1d1d;
+}
+
 .primaryButton {
   padding: 10px 16px;
   border-radius: 10px;
@@ -519,8 +549,24 @@ button:hover {
   background: #e5e7eb;
 }
 
+.cleanUpload.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .cleanUpload input {
   display: none;
+}
+
+.modalError {
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+  text-align: left;
 }
 
 /* =========================

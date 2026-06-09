@@ -1,5 +1,3 @@
-//memorabilia-client\src\components\CardItem.tsx
-
 import type { Card } from "../types/card";
 
 type Props = {
@@ -8,7 +6,6 @@ type Props = {
 };
 
 export default function CardItem({ card, onSelect }: Props) {
-  console.log("CardItem render:", card.id, card.title, card.imageFrontUrl);
   return (
     <div className="cardItem" onClick={() => onSelect(card)}>
       <div className="cardPreview">
@@ -27,7 +24,7 @@ export default function CardItem({ card, onSelect }: Props) {
         <h3 className="cardName">{card.playerName}</h3>
 
         <p className="cardMeta">
-          {card.year} • {card.manufacturer}
+          {card.year} - {card.manufacturer}
         </p>
 
         {card.goodConditionValue !== null && (
