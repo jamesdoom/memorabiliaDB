@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GradingRecommendation {
+  YES
+  NO
+  MAYBE
+  CONDITIONAL
+}
+
+enum CardStatus {
+  NEW
+  LISTED
+  GRADED
+}
+
+model Card {
+  id                    String   @id @default(uuid())
+  slug                  String   @unique
+  playerName            String
+  sport                 String
+  title                 String
+  year                  Int
+  manufacturer          String
+  cardNumber            String?
+  series                String?
+  imageFrontUrl         String?
+  imageBackUrl          String?
+  rookie                Boolean
+  goodConditionValue    Int?
+  perfectConditionValue Int?
+  gradingProfitPotential Int?
+  gradingRecommendation GradingRecommendation?
+  status CardStatus @default(NEW)
+  serialNumber          String?
+  quantity              Int      @default(1)
+  location              String?
+  importOrder           Int?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([playerName, year, manufacturer, title, cardNumber])
+  @@index([playerName])
+  
+}

@@ -1,0 +1,589 @@
+/* =========================
+GLOBAL
+========================= */
+
+:root {
+  --yankees-navy: #0c2340;
+  --yankees-blue: #1c3d6e;
+  --yankees-gray: #f3f4f6;
+  --yankees-border: #e5e7eb;
+  --yankees-text: #111827;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--yankees-gray);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: var(--yankees-text);
+}
+
+/* =========================
+LAYOUT
+========================= */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.section {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+/* =========================
+HEADER
+========================= */
+
+.headerSection {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0c2340 0%, #1c3d6e 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.headerSection h1 {
+  color: white;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.collectionSummary {
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 16px;
+  text-align: center;
+}
+
+.collectionSummary h2 {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Navigation */
+
+.navbar {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.navLink {
+  margin-right: 10px;
+}
+
+/* =========================
+VALUE CARD
+========================= */
+
+.valueCard {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+  border-radius: 16px;
+  background: white;
+  text-align: center;
+}
+
+.valueTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.valueGrid {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.valueItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.valueLabel {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.valueAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 4px;
+}
+
+.valueDivider {
+  margin: 16px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.valueUpside {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.valueUpside span {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* =========================
+   SEARCH BAR
+========================= */
+
+.searchBar {
+  width: 100%;
+  max-width: 700px;
+  margin: 24px auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.searchInput,
+.filterInput {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--yankees-border);
+  outline: none;
+  font-size: 14px;
+
+  background: white; /* 🔥 FIXED */
+  color: var(--yankees-text);
+}
+
+.searchInput {
+  flex: 1;
+}
+
+.filterInput.small {
+  width: 80px;
+}
+
+/* FOCUS STATE */
+
+.searchInput::placeholder,
+.filterInput::placeholder {
+  color: #9ca3af;
+}
+
+/* RESET BUTTON */
+
+.resetBtn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #b91c1c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.resetBtn:hover {
+  background: #991b1b;
+}
+
+/* =========================
+GRID + CARDS
+========================= */
+
+.cardGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.cardItem {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--yankees-border);
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.cardItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(12, 35, 64, 0.15);
+}
+
+/* IMAGE */
+
+.cardPreview {
+  width: 100%;
+  height: 240px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f9fafb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.cardImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* TEXT */
+
+.cardInfo {
+  text-align: center;
+}
+
+.cardName {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cardMeta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 2px 0 6px 0;
+}
+
+.cardGoodValue {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #15803d;
+}
+
+.cardPSAValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--yankees-blue);
+}
+
+/* =========================
+CARD FLIP (FIX)
+========================= */
+
+.cardFlipContainer {
+  margin: 0 auto 16px auto;
+  width: 100%;
+  max-width: 250px;
+  height: 350px;
+  perspective: 1000px;
+  padding: 12px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f9fafb, #e5e7eb);
+}
+
+.cardFlipper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d; /* 🔥 required */
+  transition: transform 0.6s;
+}
+
+.cardFlipper.flipped {
+  transform: rotateY(180deg);
+}
+
+/* FRONT + BACK */
+
+.cardFront,
+.cardBack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden; /* 🔥 CRITICAL */
+}
+
+.cardFront img,
+.cardBack img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15); /* 🔥 upgrade */
+}
+
+/* BACK SIDE */
+
+.cardBack {
+  transform: rotateY(180deg);
+}
+
+/* =========================
+MODAL
+========================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 35, 64, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+.modalTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.modalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 12px;
+  background: var(--yankees-navy);
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  background: var(--yankees-blue);
+}
+
+.modalQuantity {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.modalActionsRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.modalInfo {
+  text-align: left;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.modalTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.modalSubtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.modalMeta p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.modalValues {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  gap: 20px;
+
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalValues div {
+  display: flex;
+  flex-direction: column;
+}
+
+.modalValues span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.modalValues strong {
+  font-size: 22px;
+  margin-top: 2px;
+}
+
+.modalValues .good {
+  color: #15803d;
+}
+
+.modalValues .perfect {
+  color: var(--yankees-blue);
+}
+
+/* =========================
+BUTTONS
+========================= */
+
+button {
+  border-radius: 10px;
+  border: none;
+  background: var(--yankees-navy);
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--yankees-blue);
+}
+
+.primaryButton {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--yankees-navy);
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.primaryButton:hover {
+  background: var(--yankees-blue);
+}
+
+.cleanUpload {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  background: #f3f4f6;
+  color: #111827;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cleanUpload:hover {
+  background: #e5e7eb;
+}
+
+.cleanUpload input {
+  display: none;
+}
+
+/* =========================
+SPINNER
+========================= */
+
+.uploadSpinner {
+  width: 28px;
+  height: 28px;
+  border: 4px solid #ddd;
+  border-top: 4px solid var(--yankees-navy);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+PAGINATION
+========================= */
+
+.pagination {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.statusFilter {
+  display: inline-block;
+  cursor: pointer;
+  margin-right: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  background-color: #f2f2f2;
+  color: #222;
+
+  transition: all 0.2s ease;
+}
+
+.statusFilter:hover {
+  background-color: #e0e0e0;
+}
+
+.statusFilter.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: 600;
+}
+
+.statusFilterContainer {
+  margin-top: 10px;
+}
+
+.statusFilterLabel {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}

@@ -1,0 +1,43 @@
+//memorabilia-client\src\components\CardItem.tsx
+
+import type { Card } from "../types/card";
+
+type Props = {
+  card: Card;
+  onSelect: (card: Card) => void;
+};
+
+export default function CardItem({ card, onSelect }: Props) {
+  console.log("CardItem render:", card.id, card.title, card.imageFrontUrl);
+  return (
+    <div className="cardItem" onClick={() => onSelect(card)}>
+      <div className="cardPreview">
+        {card.imageFrontUrl ? (
+          <img
+            src={card.imageFrontUrl}
+            alt={card.title}
+            className="cardImage"
+          />
+        ) : (
+          <div className="cardPlaceholder">No Image</div>
+        )}
+      </div>
+
+      <div className="cardInfo">
+        <h3 className="cardName">{card.playerName}</h3>
+
+        <p className="cardMeta">
+          {card.year} • {card.manufacturer}
+        </p>
+
+        {card.goodConditionValue !== null && (
+          <p className="cardGoodValue">Raw: ${card.goodConditionValue}</p>
+        )}
+
+        {card.perfectConditionValue !== null && (
+          <p className="cardPSAValue">PSA10: ${card.perfectConditionValue}</p>
+        )}
+      </div>
+    </div>
+  );
+}
