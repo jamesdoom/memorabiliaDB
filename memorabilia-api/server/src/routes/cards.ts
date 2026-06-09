@@ -3,7 +3,12 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { Prisma } from "@prisma/client";
-import { cardSchema, partialCardSchema } from "../validation/cardSchema";
+import {
+  cardSchema,
+  partialCardSchema,
+  valuationSchema,
+} from "../validation/cardSchema";
+import { buildValuationUpdate } from "../services/valuationService";
 import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
@@ -235,6 +240,25 @@ router.get(
         statusCounts,
       },
     });
+  }),
+);
+
+// --------------------
+// UPDATE VALUATION
+// --------------------
+router.patch(
+  "/:id/valuation",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    const validatedData = valuationSchema.parse(req.body);
+    const valuationUpdate = buildValuationUpdate(validatedData);
+
+    const updatedCard = await prisma.card.update({
+      where: { id },
+      data: valuationUpdate,
+    });
+
+    res.json(updatedCard);
   }),
 );
 

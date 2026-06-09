@@ -35,6 +35,11 @@ model Card {
   rookie                Boolean
   goodConditionValue    Int?
   perfectConditionValue Int?
+  valueSource           String?
+  valueSourceUrl        String?
+  valueConfidence       Int?
+  valueNotes            String?
+  lastValuedAt          DateTime?
   gradingProfitPotential Int?
   gradingRecommendation GradingRecommendation?
   status CardStatus @default(NEW)
@@ -47,5 +52,6 @@ model Card {
 
   @@unique([playerName, year, manufacturer, title, cardNumber])
   @@index([playerName])
+  @@index([lastValuedAt])
   
 }

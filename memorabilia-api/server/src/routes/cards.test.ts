@@ -207,4 +207,53 @@ describe("cards routes", () => {
       expect(cardMock.update).not.toHaveBeenCalled();
     });
   });
+
+  describe("PATCH /cards/:id/valuation", () => {
+    it("updates card valuation metadata", async () => {
+      const updatedCard = {
+        id: "card-1",
+        goodConditionValue: 75,
+        perfectConditionValue: 225,
+        valueSource: "Manual estimate",
+        valueConfidence: 80,
+      };
+
+      cardMock.update.mockResolvedValue(updatedCard);
+
+      const response = await request(app)
+        .patch("/cards/card-1/valuation")
+        .send({
+          provider: "manual",
+          goodConditionValue: 75,
+          perfectConditionValue: 225,
+          valueConfidence: 80,
+          valueNotes: "Checked recent comps manually",
+        })
+        .expect(200);
+
+      expect(response.body).toEqual(updatedCard);
+      expect(cardMock.update).toHaveBeenCalledWith({
+        where: { id: "card-1" },
+        data: {
+          goodConditionValue: 75,
+          perfectConditionValue: 225,
+          lastValuedAt: expect.any(Date),
+          valueConfidence: 80,
+          valueNotes: "Checked recent comps manually",
+          valueSource: "Manual estimate",
+        },
+      });
+    });
+
+    it("rejects valuation confidence outside 0 to 100", async () => {
+      await request(app)
+        .patch("/cards/card-1/valuation")
+        .send({
+          valueConfidence: 101,
+        })
+        .expect(400);
+
+      expect(cardMock.update).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -12,6 +12,11 @@ export type Card = {
   rookie: boolean;
   goodConditionValue: number | null;
   perfectConditionValue: number | null;
+  valueSource: string | null;
+  valueSourceUrl: string | null;
+  valueConfidence: number | null;
+  valueNotes: string | null;
+  lastValuedAt: string | null;
   serialNumber: string | null;
   quantity: number;
   status: "NEW" | "LISTED" | "GRADED";

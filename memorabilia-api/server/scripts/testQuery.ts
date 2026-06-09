@@ -13,7 +13,7 @@ async function main() {
     take: 10,
   });
 
-  console.log("🔥 Cards worth grading:\n");
+  console.log("Cards worth grading:\n");
   console.log(cardsToGrade);
 }
 

@@ -60,7 +60,7 @@ async function main() {
 
   const cardsToInsert = [];
   const csvSlugs = new Set<string>();
-  const seenSlugs = new Set<string>(); // 🔥 NEW
+  const seenSlugs = new Set<string>();
   let index = 0;
 
   for await (const row of parser as AsyncIterable<RawCardRow>) {
@@ -86,12 +86,10 @@ async function main() {
         series: row.series || null,
       });
 
-      // 🔥 DEBUG: show every slug
       console.log("IMPORTING SLUG:", slug);
 
-      // 🔥 DEBUG: detect duplicate inside CSV itself
       if (seenSlugs.has(slug)) {
-        console.warn("🔥 DUPLICATE IN CSV:", slug, row);
+        console.warn("DUPLICATE IN CSV:", slug, row);
       }
       seenSlugs.add(slug);
 
@@ -166,7 +164,7 @@ async function main() {
     });
 
     if (existing) {
-      console.warn("⚠️ MATCH FOUND (UPDATE):", card.slug);
+      console.warn("MATCH FOUND (UPDATE):", card.slug);
 
       await prisma.card.update({
         where: { slug: card.slug },
@@ -196,10 +194,10 @@ async function main() {
     }
   }
 
-  console.log(`✅ Created: ${created}`);
-  console.log(`🔄 Updated: ${updated}`);
+  console.log(`Created: ${created}`);
+  console.log(`Updated: ${updated}`);
 
-  console.log("🧹 Syncing deletions...");
+  console.log("Syncing deletions...");
 
   const cardsToDelete = await prisma.card.findMany({
     where: {
@@ -224,8 +222,8 @@ async function main() {
     deleted++;
   }
 
-  console.log(`🗑️ Deleted: ${deleted}`);
-  console.log("✅ Sync complete");
+  console.log(`Deleted: ${deleted}`);
+  console.log("Sync complete");
 
   await prisma.$disconnect();
 }

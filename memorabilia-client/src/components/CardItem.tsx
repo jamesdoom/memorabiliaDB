@@ -34,6 +34,15 @@ export default function CardItem({ card, onSelect }: Props) {
         {card.perfectConditionValue !== null && (
           <p className="cardPSAValue">PSA10: ${card.perfectConditionValue}</p>
         )}
+
+        {card.valueSource && (
+          <p className="cardValueSource">
+            {card.valueSource}
+            {card.valueConfidence !== null
+              ? ` (${card.valueConfidence}% confidence)`
+              : ""}
+          </p>
+        )}
       </div>
     </div>
   );

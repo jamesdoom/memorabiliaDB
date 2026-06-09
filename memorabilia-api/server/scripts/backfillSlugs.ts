@@ -23,7 +23,7 @@ async function main() {
 
   const slugMap = new Map<string, string[]>();
 
-  // ✅ First pass: detect duplicates
+  // First pass: detect duplicates
   for (const card of cards) {
     const slug = createSlug(card);
 
@@ -34,14 +34,14 @@ async function main() {
     slugMap.get(slug)!.push(card.id);
   }
 
-  // ✅ Log duplicates clearly
+  // Log duplicates clearly
   for (const [slug, ids] of slugMap.entries()) {
     if (ids.length > 1) {
-      console.warn("🔥 DUPLICATE SLUG:", slug, ids);
+      console.warn("DUPLICATE SLUG:", slug, ids);
     }
   }
 
-  // ✅ Second pass: update ALL cards (no skipping)
+  // Second pass: update all cards.
   for (const card of cards) {
     const slug = createSlug(card);
 
@@ -51,7 +51,7 @@ async function main() {
     });
   }
 
-  console.log("✅ Slugs backfilled");
+  console.log("Slugs backfilled");
 }
 
 main().finally(() => prisma.$disconnect());

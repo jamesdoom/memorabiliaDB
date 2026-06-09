@@ -24,6 +24,9 @@ export default function CardModal({
   const [actionError, setActionError] = useState<string | null>(null);
   const [undoing, setUndoing] = useState(false);
   const busy = uploading || undoing;
+  const lastValuedAt = card.lastValuedAt
+    ? new Date(card.lastValuedAt).toLocaleDateString()
+    : null;
 
   return (
     <div className="modalOverlay" onClick={() => setSelectedCard(null)}>
@@ -181,6 +184,42 @@ export default function CardModal({
           <p className="modalQuantity">
             <strong>Quantity:</strong> {card.quantity}
           </p>
+
+          {(card.valueSource || lastValuedAt || card.valueNotes) && (
+            <div className="modalValuationMeta">
+              {card.valueSource && (
+                <p>
+                  <strong>Value source:</strong>{" "}
+                  {card.valueSourceUrl ? (
+                    <a
+                      href={card.valueSourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {card.valueSource}
+                    </a>
+                  ) : (
+                    card.valueSource
+                  )}
+                </p>
+              )}
+              {card.valueConfidence !== null && (
+                <p>
+                  <strong>Confidence:</strong> {card.valueConfidence}%
+                </p>
+              )}
+              {lastValuedAt && (
+                <p>
+                  <strong>Last valued:</strong> {lastValuedAt}
+                </p>
+              )}
+              {card.valueNotes && (
+                <p>
+                  <strong>Notes:</strong> {card.valueNotes}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

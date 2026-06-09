@@ -65,6 +65,33 @@ export async function updateCardStatus(
   });
 }
 
+export type ValuationUpdate = Partial<
+  Pick<
+    Card,
+    | "goodConditionValue"
+    | "perfectConditionValue"
+    | "valueSource"
+    | "valueSourceUrl"
+    | "valueConfidence"
+    | "valueNotes"
+  >
+> & {
+  provider?: "manual";
+};
+
+export async function updateCardValuation(
+  id: string,
+  valuation: ValuationUpdate,
+): Promise<Card> {
+  return requestJson<Card>(`/cards/${id}/valuation`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(valuation),
+  });
+}
+
 export async function uploadImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("image", file);

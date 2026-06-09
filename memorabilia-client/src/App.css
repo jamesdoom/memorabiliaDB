@@ -172,7 +172,7 @@ VALUE CARD
   outline: none;
   font-size: 14px;
 
-  background: white; /* 🔥 FIXED */
+  background: white;
   color: var(--yankees-text);
 }
 
@@ -289,6 +289,12 @@ GRID + CARDS
   color: var(--yankees-blue);
 }
 
+.cardValueSource {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
 /* =========================
 CARD FLIP (FIX)
 ========================= */
@@ -308,7 +314,7 @@ CARD FLIP (FIX)
   width: 100%;
   height: 100%;
   position: relative;
-  transform-style: preserve-3d; /* 🔥 required */
+  transform-style: preserve-3d;
   transition: transform 0.6s;
 }
 
@@ -325,7 +331,7 @@ CARD FLIP (FIX)
   display: flex;
   align-items: center;
   justify-content: center;
-  backface-visibility: hidden; /* 🔥 CRITICAL */
+  backface-visibility: hidden;
 }
 
 .cardFront img,
@@ -334,7 +340,7 @@ CARD FLIP (FIX)
   max-height: 100%;
   object-fit: contain;
   border-radius: 10px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15); /* 🔥 upgrade */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
 }
 
 /* BACK SIDE */
@@ -402,6 +408,23 @@ MODAL
 .modalQuantity {
   margin-top: 12px;
   font-size: 14px;
+}
+
+.modalValuationMeta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalValuationMeta p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #374151;
+}
+
+.modalValuationMeta a {
+  color: var(--yankees-blue);
+  font-weight: 600;
 }
 
 .modalActionsRow {
