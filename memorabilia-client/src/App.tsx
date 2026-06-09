@@ -9,33 +9,15 @@ import CollectionValueCard from "./components/CollectionValueCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
 import { useDebounce } from "./hooks/useDebounce";
-import type { Card, Pagination } from "./types/card";
+import type { Card, CardStatus, Pagination, Summary } from "./types/card";
 import "./App.css";
-
-type StatusCount = {
-  status: "NEW" | "LISTED" | "GRADED";
-  _count: {
-    status: number;
-  };
-};
-
-type Summary = {
-  totalCards: number;
-  totalGoodConditionValue: number;
-  totalPerfectConditionValue: number;
-  averageGoodConditionValue: number;
-  averagePerfectConditionValue: number;
-  statusCounts: StatusCount[];
-};
 
 function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<
-    "NEW" | "LISTED" | "GRADED" | ""
-  >("");
+  const [statusFilter, setStatusFilter] = useState<CardStatus | "">("");
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -103,7 +85,6 @@ function App() {
 
     try {
       const response = await fetchCards(buildQuery());
-      console.log("API returned cards:", response.data.length, response.data);
       setCards(response.data);
       setPagination(response.pagination);
       setSummary(response.summary);
@@ -125,7 +106,7 @@ function App() {
     setYearMax("");
   };
 
-  const getCount = (status: "NEW" | "LISTED" | "GRADED") =>
+  const getCount = (status: CardStatus) =>
     summary?.statusCounts.find((s) => s.status === status)?._count.status ?? 0;
 
   return (

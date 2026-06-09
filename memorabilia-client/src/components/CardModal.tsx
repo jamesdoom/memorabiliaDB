@@ -1,5 +1,6 @@
 // memorabilia-client\src\components\CardModal.tsx
 
+import { updateCard, updateCardStatus, uploadImage } from "../api";
 import type { Card } from "../types/card";
 
 type Props = {
@@ -73,39 +74,16 @@ export default function CardModal({
                   setUploading(true);
 
                   try {
-                    const formData = new FormData();
-                    formData.append("image", file);
-
-                    const uploadResponse = await fetch(
-                      "http://localhost:5000/upload",
-                      {
-                        method: "POST",
-                        body: formData,
-                      },
+                    const imageUrl = await uploadImage(file);
+                    const updatedCard = await updateCard(
+                      card.id,
+                      isFlipped
+                        ? { imageBackUrl: imageUrl }
+                        : { imageFrontUrl: imageUrl },
                     );
-
-                    const uploadData = await uploadResponse.json();
-                    const imageUrl = uploadData.url;
-
-                    const response = await fetch(
-                      `http://localhost:5000/cards/${card.id}`,
-                      {
-                        method: "PATCH",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(
-                          isFlipped
-                            ? { imageBackUrl: imageUrl }
-                            : { imageFrontUrl: imageUrl },
-                        ),
-                      },
-                    );
-
-                    const updatedCard = await response.json();
 
                     setSelectedCard(updatedCard);
-                    loadCards();
+                    await loadCards();
                   } finally {
                     setUploading(false);
                   }
@@ -117,16 +95,8 @@ export default function CardModal({
               <button
                 className="secondaryButton"
                 onClick={async () => {
-                  await fetch(`http://localhost:5000/cards/${card.id}/status`, {
-                    method: "PATCH",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ status: "NEW" }),
-                  });
-
+                  await updateCardStatus(card.id, "NEW");
                   await loadCards();
-                  loadCards();
                   setSelectedCard(null);
                 }}
               >

@@ -20,9 +20,45 @@ export type Card = {
   location: string | null;
 };
 
+export type CardStatus = Card["status"];
+
 export type Pagination = {
   totalCount: number;
   currentPage: number;
   pageSize: number;
   totalPages: number;
+};
+
+export type StatusCount = {
+  status: CardStatus;
+  _count: {
+    status: number;
+  };
+};
+
+export type Summary = {
+  totalCards: number;
+  totalGoodConditionValue: number;
+  totalPerfectConditionValue: number;
+  averageGoodConditionValue: number;
+  averagePerfectConditionValue: number;
+  statusCounts: StatusCount[];
+};
+
+export type CardsResponse = {
+  data: Card[];
+  pagination: Pagination;
+  summary: Summary;
+};
+
+export type RecommendationCard = Pick<
+  Card,
+  "id" | "playerName" | "year" | "title" | "goodConditionValue"
+> & {
+  gradingProfitPotential: number | null;
+};
+
+export type RecommendationsResponse = {
+  grade: RecommendationCard[];
+  sellRaw: RecommendationCard[];
 };
