@@ -66,45 +66,55 @@ export default function Recommendations() {
         </div>
       )}
 
-      <h2>Grade These</h2>
-      {grade.length === 0 ? (
-        <p>No strong grading candidates.</p>
-      ) : (
-        <ul>
-          {grade.map((card) => (
-            <li key={card.id}>
-              {card.playerName} ({card.year}) - {card.title} | Profit: $
-              {card.gradingProfitPotential ?? 0}
-              <button
-                disabled={updatingId === card.id}
-                onClick={() => updateStatus(card.id, "GRADED")}
-              >
-                {updatingId === card.id ? "Saving..." : "Mark Graded"}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section className="recommendationSection">
+        <h2>Grade These</h2>
+        {grade.length === 0 ? (
+          <p>No strong grading candidates.</p>
+        ) : (
+          <ul className="recommendationList">
+            {grade.map((card) => (
+              <li className="recommendationItem" key={card.id}>
+                <div>
+                  <strong>{card.playerName}</strong> ({card.year}) -{" "}
+                  {card.title}
+                  <span>Profit: ${card.gradingProfitPotential ?? 0}</span>
+                </div>
+                <button
+                  disabled={updatingId === card.id}
+                  onClick={() => updateStatus(card.id, "GRADED")}
+                >
+                  {updatingId === card.id ? "Saving..." : "Mark Graded"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      <h2>Sell Raw</h2>
-      {sellRaw.length === 0 ? (
-        <p>No sell candidates.</p>
-      ) : (
-        <ul>
-          {sellRaw.map((card) => (
-            <li key={card.id}>
-              {card.playerName} ({card.year}) - {card.title} | Value: $
-              {card.goodConditionValue ?? 0}
-              <button
-                disabled={updatingId === card.id}
-                onClick={() => updateStatus(card.id, "LISTED")}
-              >
-                {updatingId === card.id ? "Saving..." : "Mark Listed"}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section className="recommendationSection">
+        <h2>Sell Raw</h2>
+        {sellRaw.length === 0 ? (
+          <p>No sell candidates.</p>
+        ) : (
+          <ul className="recommendationList">
+            {sellRaw.map((card) => (
+              <li className="recommendationItem" key={card.id}>
+                <div>
+                  <strong>{card.playerName}</strong> ({card.year}) -{" "}
+                  {card.title}
+                  <span>Value: ${card.goodConditionValue ?? 0}</span>
+                </div>
+                <button
+                  disabled={updatingId === card.id}
+                  onClick={() => updateStatus(card.id, "LISTED")}
+                >
+                  {updatingId === card.id ? "Saving..." : "Mark Listed"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

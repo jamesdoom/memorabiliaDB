@@ -187,9 +187,6 @@ router.get(
       if (yearMax !== undefined) where.year.lte = yearMax;
     }
 
-    // --------------------
-    // 🔥 Optimized parallel DB calls
-    // --------------------
     const [totalCount, cards, statusCounts, aggregate] = await Promise.all([
       prisma.card.count({ where }),
 

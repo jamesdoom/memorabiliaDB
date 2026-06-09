@@ -11,3 +11,38 @@
 .recommendationsState {
   padding: 20px;
 }
+
+.recommendationSection {
+  margin-top: 28px;
+}
+
+.recommendationList {
+  display: grid;
+  gap: 10px;
+  max-width: 920px;
+  padding: 0;
+  list-style: none;
+}
+
+.recommendationItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.recommendationItem span {
+  display: block;
+  margin-top: 4px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.recommendationItem button {
+  padding: 10px 14px;
+  white-space: nowrap;
+}
