@@ -22,6 +22,7 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
 - CSV import script for bulk-loading and syncing card data.
 - Centralized client API layer with user-visible loading and error feedback.
+- Deployment-ready API configuration for hosted ports and client origins.
 - API route tests for the core card workflows.
 - GitHub Actions CI for automated API and client verification.
 
@@ -89,6 +90,8 @@ The API runs at `http://localhost:5000`.
 Required API environment variables:
 
 ```text
+PORT=5000
+CLIENT_ORIGIN=http://localhost:5173
 DATABASE_URL=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
@@ -112,12 +115,70 @@ Optional client environment variable:
 VITE_API_BASE_URL=http://localhost:5000
 ```
 
+### Health Check
+
+```bash
+curl http://localhost:5000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "service": "memorabilia-api"
+}
+```
+
 ### Import Sample Data
 
 ```bash
 cd memorabilia-api/server
 npm run import -- ./cards.csv
 ```
+
+## Deployment Readiness
+
+The project is not deployed yet, but the configuration is ready for a future hosted setup.
+
+### Planned Client Hosting: Vercel
+
+When deploying the React client to Vercel:
+
+- Root directory: `memorabilia-client`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variable: `VITE_API_BASE_URL=https://your-api-host.example.com`
+
+### Planned API Hosting
+
+The Express API can be hosted on a Node-friendly platform such as Render, Railway, Fly.io, or a similar service.
+
+Recommended API settings:
+
+- Root directory: `memorabilia-api/server`
+- Build command: `npm ci && npm run build`
+- Start command: `npm start`
+- Health check path: `/health`
+
+Required production API environment variables:
+
+```text
+PORT=
+CLIENT_ORIGIN=https://your-vercel-app.vercel.app
+DATABASE_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+`CLIENT_ORIGIN` supports a comma-separated list of allowed origins, which is useful for allowing both local development and a production Vercel URL during staged rollout.
+
+### Database And Storage
+
+- Use a hosted PostgreSQL database and set `DATABASE_URL` on the API host.
+- Run Prisma migrations against the production database before starting the API.
+- Use Cloudinary for image storage and provide the Cloudinary credentials to the API host.
 
 ## Testing And CI
 
@@ -152,6 +213,7 @@ GitHub Actions runs these checks automatically on pushes and pull requests to `m
 
 Current automated tests cover:
 
+- `GET /health`
 - `GET /cards` pagination, filters, and summary shape
 - `GET /cards/recommendations`
 - `PATCH /cards/:id/status` success path
@@ -162,5 +224,5 @@ Current automated tests cover:
 - Add more API tests for create/update/delete card flows.
 - Add frontend component tests for filtering, status changes, and upload feedback.
 - Improve the recommendations UI with richer card previews and sorting controls.
-- Add deployment documentation for the client, API, database, and environment variables.
+- Deploy the client and API after the next feature set is complete.
 - Add authentication if the app becomes multi-user.
