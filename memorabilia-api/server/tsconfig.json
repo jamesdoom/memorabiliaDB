@@ -7,11 +7,12 @@
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "outDir": "dist",
     "types": ["node"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "5.0"
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }
