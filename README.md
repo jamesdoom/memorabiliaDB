@@ -1,6 +1,6 @@
 # MemorabiliaDB
 
-MemorabiliaDB is a full-stack sports card inventory app for tracking collection value, card images, grading candidates, and listing status. It was built as a practical collector workflow: import a CSV, review the inventory, identify cards worth grading, upload front/back images, and move cards through status states as they are listed or graded.
+MemorabiliaDB is a full-stack sports card inventory app for tracking collection value, valuation confidence, card images, grading candidates, and listing status. It was built as a practical collector workflow: import a CSV, review the inventory, identify cards worth grading, manually update valuation metadata, upload front/back images, and move cards through status states as cards are listed or graded.
 
 ## Screenshots
 
@@ -15,10 +15,12 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 ## Feature Walkthrough
 
 - Inventory dashboard with total estimated raw value, perfect-condition value, and potential upside.
-- Paginated card grid with card images, player names, manufacturer/year metadata, raw value, and PSA 10-style value.
-- Filters for player name, manufacturer, year range, and status.
+- Valuation progress summary showing valued cards, cards that still need valuation, average confidence, and latest valuation update.
+- Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
+- Filters for player name, manufacturer, year range, card status, valuation status, and oldest valuation review.
 - Status tracking for `NEW`, `LISTED`, and `GRADED` cards.
-- Card detail modal with front/back image flipping and Cloudinary image upload.
+- Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
+- Manual valuation workflow for raw value, perfect-condition value, source, source URL, confidence, notes, and last-valued timestamp.
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
 - CSV import script for bulk-loading and syncing card data.
 - Centralized client API layer with user-visible loading and error feedback.
@@ -50,7 +52,19 @@ flowchart LR
   Import --> Prisma
 ```
 
-The client talks to the API through a centralized request layer in `memorabilia-client/src/api.ts`. The API exposes card, summary, recommendation, status, and upload routes, with Prisma handling database access. Image uploads are stored in Cloudinary, while the database stores the resulting image URLs.
+The client talks to the API through a centralized request layer in `memorabilia-client/src/api.ts`. The API exposes card, summary, recommendation, status, valuation, and upload routes, with Prisma handling database access. Image uploads are stored in Cloudinary, while the database stores the resulting image URLs.
+
+Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
+
+## Valuation Workflow
+
+The valuation workflow is designed to help a collector work through a large inventory methodically:
+
+1. Use the dashboard to see how many cards are valued versus still missing valuation metadata.
+2. Select `Needs valuation` to focus only on cards without a valuation timestamp.
+3. Open a card and edit raw value, perfect-condition value, source, source URL, confidence, and notes.
+4. Save the valuation to update the card, refresh the inventory summary, and change the tile badge from `Unvalued` to `Updated <date>`.
+5. Use `Valued` and `Oldest valuation first` to audit older estimates over time.
 
 ## Project Structure
 
@@ -214,13 +228,17 @@ GitHub Actions runs these checks automatically on pushes and pull requests to `m
 Current automated tests cover:
 
 - `GET /health`
-- `GET /cards` pagination, filters, and summary shape
+- `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
 - `GET /cards/recommendations`
 - `PATCH /cards/:id/status` success path
 - `PATCH /cards/:id/status` invalid status rejection
+- `PATCH /cards/:id/valuation` success path
+- `PATCH /cards/:id/valuation` validation rejection
 
 ## Roadmap
 
+- Add edit-card details in the client for correcting player, title, year, manufacturer, location, and card number.
+- Add CSV import support for valuation source, confidence, notes, and last-valued timestamps.
 - Add more API tests for create/update/delete card flows.
 - Add frontend component tests for filtering, status changes, and upload feedback.
 - Improve the recommendations UI with richer card previews and sorting controls.
