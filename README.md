@@ -22,7 +22,7 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 - Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
 - Manual valuation workflow for raw value, perfect-condition value, source, source URL, confidence, notes, and last-valued timestamp.
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
-- CSV import script for bulk-loading and syncing card data.
+- CSV import script for bulk-loading and syncing card data, including optional valuation metadata.
 - Centralized client API layer with user-visible loading and error feedback.
 - Deployment-ready API configuration for hosted ports and client origins.
 - API route tests for the core card workflows.
@@ -151,6 +151,18 @@ cd memorabilia-api/server
 npm run import -- ./cards.csv
 ```
 
+The import script supports these optional valuation columns:
+
+```text
+valueSource,valueSourceUrl,valueConfidence,valueNotes,lastValuedAt
+```
+
+If a row includes `goodConditionValue` or `perfectConditionValue` but does not include valuation metadata, the importer defaults to:
+
+- `valueSource`: `CSV import`
+- `valueConfidence`: `50`
+- `lastValuedAt`: the current import timestamp
+
 ## Deployment Readiness
 
 The project is not deployed yet, but the configuration is ready for a future hosted setup.
@@ -237,8 +249,6 @@ Current automated tests cover:
 
 ## Roadmap
 
-- Add edit-card details in the client for correcting player, title, year, manufacturer, location, and card number.
-- Add CSV import support for valuation source, confidence, notes, and last-valued timestamps.
 - Add more API tests for create/update/delete card flows.
 - Add frontend component tests for filtering, status changes, and upload feedback.
 - Improve the recommendations UI with richer card previews and sorting controls.

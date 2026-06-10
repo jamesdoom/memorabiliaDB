@@ -21,6 +21,11 @@ interface RawCardRow {
   rookie?: string;
   goodConditionValue?: string;
   perfectConditionValue?: string;
+  valueSource?: string;
+  valueSourceUrl?: string;
+  valueConfidence?: string;
+  valueNotes?: string;
+  lastValuedAt?: string;
   serialNumber?: string;
   quantity?: string;
   location?: string;
@@ -38,6 +43,29 @@ function createSlug(row: {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function parseOptionalInt(value?: string) {
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
+function parseOptionalDate(value?: string) {
+  if (!value) return null;
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseConfidence(value?: string) {
+  const parsed = parseOptionalInt(value);
+
+  if (parsed === null) return null;
+  if (parsed < 0 || parsed > 100) return null;
+
+  return parsed;
 }
 
 async function main() {
@@ -61,6 +89,7 @@ async function main() {
   const cardsToInsert = [];
   const csvSlugs = new Set<string>();
   const seenSlugs = new Set<string>();
+  const importStartedAt = new Date();
   let index = 0;
 
   for await (const row of parser as AsyncIterable<RawCardRow>) {
@@ -95,15 +124,16 @@ async function main() {
 
       csvSlugs.add(slug);
 
-      const goodValue =
-        row.goodConditionValue && !isNaN(Number(row.goodConditionValue))
-          ? Number(row.goodConditionValue)
-          : null;
-
-      const perfectValue =
-        row.perfectConditionValue && !isNaN(Number(row.perfectConditionValue))
-          ? Number(row.perfectConditionValue)
-          : null;
+      const goodValue = parseOptionalInt(row.goodConditionValue);
+      const perfectValue = parseOptionalInt(row.perfectConditionValue);
+      const hasValue = goodValue !== null || perfectValue !== null;
+      const parsedConfidence = parseConfidence(row.valueConfidence);
+      const parsedLastValuedAt = parseOptionalDate(row.lastValuedAt);
+      const valueSource = row.valueSource || (hasValue ? "CSV import" : null);
+      const valueConfidence =
+        parsedConfidence !== null ? parsedConfidence : hasValue ? 50 : null;
+      const lastValuedAt =
+        parsedLastValuedAt ?? (hasValue ? importStartedAt : null);
 
       const GRADING_COST = 25;
 
@@ -139,6 +169,11 @@ async function main() {
 
         goodConditionValue: goodValue,
         perfectConditionValue: perfectValue,
+        valueSource,
+        valueSourceUrl: row.valueSourceUrl || null,
+        valueConfidence,
+        valueNotes: row.valueNotes || null,
+        lastValuedAt,
         gradingProfitPotential,
         gradingRecommendation,
 
@@ -175,6 +210,11 @@ async function main() {
           rookie: card.rookie,
           goodConditionValue: card.goodConditionValue,
           perfectConditionValue: card.perfectConditionValue,
+          valueSource: card.valueSource,
+          valueSourceUrl: card.valueSourceUrl,
+          valueConfidence: card.valueConfidence,
+          valueNotes: card.valueNotes,
+          lastValuedAt: card.lastValuedAt,
           serialNumber: card.serialNumber,
           quantity: card.quantity,
           location: card.location,
