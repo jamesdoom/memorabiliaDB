@@ -273,6 +273,47 @@ describe("cards routes", () => {
     });
   });
 
+  describe("PATCH /cards/:id", () => {
+    it("updates editable card details", async () => {
+      const updatedCard = {
+        id: "card-1",
+        playerName: "Ken Griffey Jr.",
+        title: "Updated Rookie",
+        year: 1989,
+        manufacturer: "Upper Deck",
+        quantity: 2,
+        location: "Display Case",
+      };
+
+      cardMock.update.mockResolvedValue(updatedCard);
+
+      const response = await request(app)
+        .patch("/cards/card-1")
+        .send({
+          playerName: "Ken Griffey Jr.",
+          title: "Updated Rookie",
+          year: 1989,
+          manufacturer: "Upper Deck",
+          quantity: 2,
+          location: "Display Case",
+        })
+        .expect(200);
+
+      expect(response.body).toEqual(updatedCard);
+      expect(cardMock.update).toHaveBeenCalledWith({
+        where: { id: "card-1" },
+        data: {
+          playerName: "Ken Griffey Jr.",
+          title: "Updated Rookie",
+          year: 1989,
+          manufacturer: "Upper Deck",
+          quantity: 2,
+          location: "Display Case",
+        },
+      });
+    });
+  });
+
   describe("PATCH /cards/:id/valuation", () => {
     it("updates card valuation metadata", async () => {
       const updatedCard = {

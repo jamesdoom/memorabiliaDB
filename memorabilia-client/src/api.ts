@@ -52,6 +52,36 @@ export async function updateCard(
   });
 }
 
+export type CardDetailsUpdate = Partial<
+  Pick<
+    Card,
+    | "playerName"
+    | "sport"
+    | "title"
+    | "year"
+    | "manufacturer"
+    | "cardNumber"
+    | "series"
+    | "rookie"
+    | "serialNumber"
+    | "quantity"
+    | "location"
+  >
+>;
+
+export async function updateCardDetails(
+  id: string,
+  updates: CardDetailsUpdate,
+): Promise<Card> {
+  return requestJson<Card>(`/cards/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updates),
+  });
+}
+
 export async function updateCardStatus(
   id: string,
   status: CardStatus,

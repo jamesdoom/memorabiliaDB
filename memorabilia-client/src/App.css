@@ -539,6 +539,7 @@ MODAL
   color: var(--yankees-blue);
 }
 
+.detailsHeader,
 .valuationHeader {
   display: flex;
   align-items: center;
@@ -549,11 +550,13 @@ MODAL
   border-top: 1px solid #e5e7eb;
 }
 
+.detailsHeader h3,
 .valuationHeader h3 {
   margin: 0;
   font-size: 15px;
 }
 
+.detailsForm,
 .valuationForm {
   margin-top: 12px;
   display: flex;
@@ -561,12 +564,14 @@ MODAL
   gap: 12px;
 }
 
+.detailsGrid,
 .valuationGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+.detailsForm label,
 .valuationForm label {
   display: flex;
   flex-direction: column;
@@ -576,6 +581,8 @@ MODAL
   color: #4b5563;
 }
 
+.detailsForm input,
+.detailsForm textarea,
 .valuationForm input,
 .valuationForm textarea {
   width: 100%;
@@ -587,10 +594,22 @@ MODAL
   background: white;
 }
 
+.detailsForm textarea,
 .valuationForm textarea {
   resize: vertical;
 }
 
+.detailsCheckbox {
+  flex-direction: row !important;
+  align-items: center;
+}
+
+.detailsCheckbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.detailsActions,
 .valuationActions {
   display: flex;
   justify-content: flex-end;
@@ -778,5 +797,10 @@ PAGINATION
 @media (max-width: 720px) {
   .valuationStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detailsGrid,
+  .valuationGrid {
+    grid-template-columns: 1fr;
   }
 }
