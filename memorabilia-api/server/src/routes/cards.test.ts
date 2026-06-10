@@ -50,22 +50,31 @@ describe("cards routes", () => {
         },
       ];
 
-      cardMock.count.mockResolvedValue(12);
+      cardMock.count.mockResolvedValueOnce(12).mockResolvedValueOnce(8);
       cardMock.findMany.mockResolvedValue(cards);
       cardMock.groupBy.mockResolvedValue([
         { status: "NEW", _count: { status: 10 } },
         { status: "LISTED", _count: { status: 2 } },
       ]);
-      cardMock.aggregate.mockResolvedValue({
-        _sum: {
-          goodConditionValue: 500,
-          perfectConditionValue: 1200,
-        },
-        _avg: {
-          goodConditionValue: 42,
-          perfectConditionValue: 100,
-        },
-      });
+      cardMock.aggregate
+        .mockResolvedValueOnce({
+          _sum: {
+            goodConditionValue: 500,
+            perfectConditionValue: 1200,
+          },
+          _avg: {
+            goodConditionValue: 42,
+            perfectConditionValue: 100,
+          },
+        })
+        .mockResolvedValueOnce({
+          _avg: {
+            valueConfidence: 76,
+          },
+          _max: {
+            lastValuedAt: new Date("2026-06-10T12:00:00.000Z"),
+          },
+        });
 
       const response = await request(app)
         .get("/cards")
@@ -96,6 +105,10 @@ describe("cards routes", () => {
           totalPerfectConditionValue: 1200,
           averageGoodConditionValue: 42,
           averagePerfectConditionValue: 100,
+          valuedCards: 8,
+          missingValuations: 4,
+          averageValueConfidence: 76,
+          latestValuedAt: "2026-06-10T12:00:00.000Z",
           statusCounts: [
             { status: "NEW", _count: { status: 10 } },
             { status: "LISTED", _count: { status: 2 } },
@@ -126,6 +139,58 @@ describe("cards routes", () => {
         take: 5,
         orderBy: {
           year: "desc",
+        },
+      });
+      expect(cardMock.count).toHaveBeenNthCalledWith(2, {
+        where: {
+          ...expectedWhere,
+          lastValuedAt: {
+            not: null,
+          },
+        },
+      });
+    });
+
+    it("filters cards that need valuation and sorts by oldest valuation", async () => {
+      cardMock.count.mockResolvedValueOnce(3).mockResolvedValueOnce(0);
+      cardMock.findMany.mockResolvedValue([]);
+      cardMock.groupBy.mockResolvedValue([]);
+      cardMock.aggregate
+        .mockResolvedValueOnce({
+          _sum: {
+            goodConditionValue: null,
+            perfectConditionValue: null,
+          },
+          _avg: {
+            goodConditionValue: null,
+            perfectConditionValue: null,
+          },
+        })
+        .mockResolvedValueOnce({
+          _avg: {
+            valueConfidence: null,
+          },
+          _max: {
+            lastValuedAt: null,
+          },
+        });
+
+      await request(app)
+        .get("/cards")
+        .query({
+          valuationStatus: "needs",
+          sortBy: "lastValuedAt",
+        })
+        .expect(200);
+
+      expect(cardMock.findMany).toHaveBeenCalledWith({
+        where: {
+          lastValuedAt: null,
+        },
+        skip: 0,
+        take: 20,
+        orderBy: {
+          lastValuedAt: "asc",
         },
       });
     });

@@ -47,6 +47,10 @@ export type Summary = {
   totalPerfectConditionValue: number;
   averageGoodConditionValue: number;
   averagePerfectConditionValue: number;
+  valuedCards: number;
+  missingValuations: number;
+  averageValueConfidence: number;
+  latestValuedAt: string | null;
   statusCounts: StatusCount[];
 };
 

@@ -6,6 +6,10 @@ type Props = {
 };
 
 export default function CardItem({ card, onSelect }: Props) {
+  const valuedDate = card.lastValuedAt
+    ? new Date(card.lastValuedAt).toLocaleDateString()
+    : null;
+
   return (
     <div className="cardItem" onClick={() => onSelect(card)}>
       <div className="cardPreview">
@@ -43,6 +47,14 @@ export default function CardItem({ card, onSelect }: Props) {
               : ""}
           </p>
         )}
+
+        <p
+          className={`valuationBadge ${
+            card.lastValuedAt ? "valued" : "needsValuation"
+          }`}
+        >
+          {card.lastValuedAt ? `Updated ${valuedDate}` : "Unvalued"}
+        </p>
       </div>
     </div>
   );

@@ -12,6 +12,9 @@ import { useDebounce } from "./hooks/useDebounce";
 import type { Card, CardStatus, Pagination, Summary } from "./types/card";
 import "./App.css";
 
+type ValuationFilter = "" | "needs" | "valued";
+type SortMode = "" | "oldestValued";
+
 function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -19,6 +22,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<CardStatus | "">("");
+  const [valuationFilter, setValuationFilter] = useState<ValuationFilter>("");
+  const [sortMode, setSortMode] = useState<SortMode>("");
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -39,7 +44,15 @@ function App() {
 
   useEffect(() => {
     setPage(1);
-  }, [manufacturer, playerName, yearMin, yearMax]);
+  }, [
+    manufacturer,
+    playerName,
+    yearMin,
+    yearMax,
+    statusFilter,
+    valuationFilter,
+    sortMode,
+  ]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -70,6 +83,11 @@ function App() {
 
     if (debouncedYearMax) params.append("yearMax", debouncedYearMax);
     if (statusFilter) params.append("status", statusFilter);
+    if (valuationFilter) params.append("valuationStatus", valuationFilter);
+    if (sortMode === "oldestValued") {
+      params.append("sortBy", "lastValuedAt");
+      params.append("order", "asc");
+    }
 
     return `?${params.toString()}`;
   }, [
@@ -79,6 +97,8 @@ function App() {
     debouncedYearMin,
     debouncedYearMax,
     statusFilter,
+    valuationFilter,
+    sortMode,
   ]);
 
   const loadCards = useCallback(async () => {
@@ -138,6 +158,10 @@ function App() {
                       <CollectionValueCard
                         good={summary.totalGoodConditionValue}
                         perfect={summary.totalPerfectConditionValue}
+                        valuedCards={summary.valuedCards}
+                        missingValuations={summary.missingValuations}
+                        averageValueConfidence={summary.averageValueConfidence}
+                        latestValuedAt={summary.latestValuedAt}
                       />
 
                       <p className="statusFilterLabel">Filter by Status:</p>
@@ -172,6 +196,43 @@ function App() {
                             ALL
                           </p>
                         </div>
+                      </div>
+
+                      <p className="statusFilterLabel">Valuation Workflow:</p>
+
+                      <div className="statusFilterContainer">
+                        <p
+                          className={`statusFilter ${valuationFilter === "needs" ? "active" : ""}`}
+                          onClick={() =>
+                            setValuationFilter((current) =>
+                              current === "needs" ? "" : "needs",
+                            )
+                          }
+                        >
+                          Needs valuation: {summary.missingValuations}
+                        </p>
+
+                        <p
+                          className={`statusFilter ${valuationFilter === "valued" ? "active" : ""}`}
+                          onClick={() =>
+                            setValuationFilter((current) =>
+                              current === "valued" ? "" : "valued",
+                            )
+                          }
+                        >
+                          Valued: {summary.valuedCards}
+                        </p>
+
+                        <p
+                          className={`statusFilter ${sortMode === "oldestValued" ? "active" : ""}`}
+                          onClick={() =>
+                            setSortMode((current) =>
+                              current === "oldestValued" ? "" : "oldestValued",
+                            )
+                          }
+                        >
+                          Oldest valuation first
+                        </p>
                       </div>
                     </>
                   )}

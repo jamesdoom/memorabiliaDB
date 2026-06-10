@@ -147,6 +147,29 @@ VALUE CARD
   color: #111827;
 }
 
+.valuationStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.valuationStats div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.valuationStats strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
 /* =========================
    SEARCH BAR
 ========================= */
@@ -293,6 +316,28 @@ GRID + CARDS
   margin: 6px 0 0;
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.valuationBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  margin: 8px 0 0;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.valuationBadge.valued {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.valuationBadge.needsValuation {
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 /* =========================
@@ -728,4 +773,10 @@ PAGINATION
   margin-top: 10px;
   margin-bottom: 6px;
   font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .valuationStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

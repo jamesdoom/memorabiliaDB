@@ -3,12 +3,26 @@
 type Props = {
   good: number;
   perfect: number;
+  valuedCards: number;
+  missingValuations: number;
+  averageValueConfidence: number;
+  latestValuedAt: string | null;
 };
 
-export default function CollectionValueCard({ good, perfect }: Props) {
+export default function CollectionValueCard({
+  good,
+  perfect,
+  valuedCards,
+  missingValuations,
+  averageValueConfidence,
+  latestValuedAt,
+}: Props) {
   const low = Math.min(good, perfect);
   const high = Math.max(good, perfect);
   const upside = high - low;
+  const latestValuation = latestValuedAt
+    ? new Date(latestValuedAt).toLocaleDateString()
+    : "None";
 
   return (
     <div className="valueCard">
@@ -30,6 +44,25 @@ export default function CollectionValueCard({ good, perfect }: Props) {
 
       <div className="valueUpside">
         Potential upside <span>${upside.toLocaleString()}</span>
+      </div>
+
+      <div className="valuationStats">
+        <div>
+          <span className="valueLabel">Valued</span>
+          <strong>{valuedCards.toLocaleString()}</strong>
+        </div>
+        <div>
+          <span className="valueLabel">Needs valuation</span>
+          <strong>{missingValuations.toLocaleString()}</strong>
+        </div>
+        <div>
+          <span className="valueLabel">Avg confidence</span>
+          <strong>{Math.round(averageValueConfidence)}%</strong>
+        </div>
+        <div>
+          <span className="valueLabel">Latest update</span>
+          <strong>{latestValuation}</strong>
+        </div>
       </div>
     </div>
   );

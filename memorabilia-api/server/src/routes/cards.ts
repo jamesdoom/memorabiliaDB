@@ -28,16 +28,38 @@ router.get(
       },
     });
 
-    const aggregate = await prisma.card.aggregate({
-      _sum: {
-        goodConditionValue: true,
-        perfectConditionValue: true,
-      },
-      _avg: {
-        goodConditionValue: true,
-        perfectConditionValue: true,
-      },
-    });
+    const [aggregate, valuedCount, valuationAggregate] = await Promise.all([
+      prisma.card.aggregate({
+        _sum: {
+          goodConditionValue: true,
+          perfectConditionValue: true,
+        },
+        _avg: {
+          goodConditionValue: true,
+          perfectConditionValue: true,
+        },
+      }),
+      prisma.card.count({
+        where: {
+          lastValuedAt: {
+            not: null,
+          },
+        } as any,
+      }),
+      prisma.card.aggregate({
+        where: {
+          lastValuedAt: {
+            not: null,
+          },
+        } as any,
+        _avg: {
+          valueConfidence: true,
+        } as any,
+        _max: {
+          lastValuedAt: true,
+        } as any,
+      } as any),
+    ]);
 
     res.json({
       totalCards,
@@ -45,6 +67,11 @@ router.get(
       totalPerfectConditionValue: aggregate._sum.perfectConditionValue ?? 0,
       averageGoodConditionValue: aggregate._avg.goodConditionValue ?? 0,
       averagePerfectConditionValue: aggregate._avg.perfectConditionValue ?? 0,
+      valuedCards: valuedCount,
+      missingValuations: totalCards - valuedCount,
+      averageValueConfidence:
+        (valuationAggregate._avg as any).valueConfidence ?? 0,
+      latestValuedAt: (valuationAggregate._max as any).lastValuedAt ?? null,
       statusCounts,
     });
   }),
@@ -132,6 +159,7 @@ router.get(
       "year",
       "goodConditionValue",
       "perfectConditionValue",
+      "lastValuedAt",
       "createdAt",
       "importOrder",
     ];
@@ -161,11 +189,24 @@ router.get(
     const yearMax = req.query.yearMax ? Number(req.query.yearMax) : undefined;
 
     const status = req.query.status ? String(req.query.status) : undefined;
+    const valuationStatus = req.query.valuationStatus
+      ? String(req.query.valuationStatus)
+      : undefined;
 
-    const where: Prisma.CardWhereInput = {};
+    const where: Prisma.CardWhereInput & Record<string, unknown> = {};
 
     if (status) {
       where.status = status as any;
+    }
+
+    if (valuationStatus === "needs") {
+      where.lastValuedAt = null;
+    }
+
+    if (valuationStatus === "valued") {
+      where.lastValuedAt = {
+        not: null,
+      };
     }
 
     if (manufacturer) {
@@ -192,7 +233,14 @@ router.get(
       if (yearMax !== undefined) where.year.lte = yearMax;
     }
 
-    const [totalCount, cards, statusCounts, aggregate] = await Promise.all([
+    const [
+      totalCount,
+      cards,
+      statusCounts,
+      aggregate,
+      valuedCount,
+      valuationAggregate,
+    ] = await Promise.all([
       prisma.card.count({ where }),
 
       prisma.card.findMany({
@@ -221,6 +269,30 @@ router.get(
           perfectConditionValue: true,
         },
       }),
+
+      prisma.card.count({
+        where: {
+          ...where,
+          lastValuedAt: {
+            not: null,
+          },
+        } as any,
+      }),
+
+      prisma.card.aggregate({
+        where: {
+          ...where,
+          lastValuedAt: {
+            not: null,
+          },
+        } as any,
+        _avg: {
+          valueConfidence: true,
+        } as any,
+        _max: {
+          lastValuedAt: true,
+        } as any,
+      } as any),
     ]);
 
     res.json({
@@ -238,6 +310,11 @@ router.get(
         averageGoodConditionValue: aggregate._avg.goodConditionValue ?? 0,
         averagePerfectConditionValue: aggregate._avg.perfectConditionValue ?? 0,
         statusCounts,
+        valuedCards: valuedCount,
+        missingValuations: totalCount - valuedCount,
+        averageValueConfidence:
+          (valuationAggregate._avg as any).valueConfidence ?? 0,
+        latestValuedAt: (valuationAggregate._max as any).lastValuedAt ?? null,
       },
     });
   }),
