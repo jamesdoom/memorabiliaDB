@@ -8,6 +8,10 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 
 ![Inventory screen](docs/screenshots/inventory.png)
 
+### Card Detail And Valuation Editing
+
+![Card detail and valuation editing modal](docs/screenshots/card-modal.png)
+
 ### Recommendations
 
 ![Recommendations screen](docs/screenshots/recommendations.png)
