@@ -179,7 +179,10 @@ When deploying the React client to Vercel:
 - Root directory: `memorabilia-client`
 - Build command: `npm run build`
 - Output directory: `dist`
+- Install command: `npm install` (or leave Vercel's default enabled)
 - Environment variable: `VITE_API_BASE_URL=https://your-api-host.example.com`
+
+Do not set the build command to `vite build` directly. The project build script also runs TypeScript compilation and uses the locally installed Vite binary.
 
 ### Planned API Hosting
 
