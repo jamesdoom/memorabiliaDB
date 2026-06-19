@@ -6,6 +6,8 @@ const prismaMock = vi.hoisted(() => ({
   card: {
     aggregate: vi.fn(),
     count: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
     findMany: vi.fn(),
     groupBy: vi.fn(),
     update: vi.fn(),
@@ -15,6 +17,8 @@ const prismaMock = vi.hoisted(() => ({
 const cardMock = prismaMock.card as {
   aggregate: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
+  create: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
   groupBy: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
@@ -273,6 +277,51 @@ describe("cards routes", () => {
     });
   });
 
+  describe("POST /cards", () => {
+    it("creates a card with a stable descriptive slug", async () => {
+      const createdCard = {
+        id: "card-new",
+        slug: "ken-griffey-jr-1989-upper-deck-rookie-card-1",
+        playerName: "Ken Griffey Jr.",
+        sport: "Baseball",
+        title: "Rookie Card",
+        year: 1989,
+        manufacturer: "Upper Deck",
+        cardNumber: "1",
+        rookie: true,
+      };
+
+      cardMock.create.mockResolvedValue(createdCard);
+
+      const response = await request(app)
+        .post("/cards")
+        .send({
+          playerName: "Ken Griffey Jr.",
+          sport: "Baseball",
+          title: "Rookie Card",
+          year: 1989,
+          manufacturer: "Upper Deck",
+          cardNumber: "1",
+          rookie: true,
+        })
+        .expect(201);
+
+      expect(response.body).toEqual(createdCard);
+      expect(cardMock.create).toHaveBeenCalledWith({
+        data: {
+          playerName: "Ken Griffey Jr.",
+          sport: "Baseball",
+          title: "Rookie Card",
+          year: 1989,
+          manufacturer: "Upper Deck",
+          cardNumber: "1",
+          rookie: true,
+          slug: "ken-griffey-jr-1989-upper-deck-rookie-card-1",
+        },
+      });
+    });
+  });
+
   describe("PATCH /cards/:id", () => {
     it("updates editable card details", async () => {
       const updatedCard = {
@@ -360,6 +409,23 @@ describe("cards routes", () => {
         .expect(400);
 
       expect(cardMock.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("DELETE /cards/:id", () => {
+    it("deletes a card", async () => {
+      cardMock.delete.mockResolvedValue({ id: "card-1" });
+
+      const response = await request(app)
+        .delete("/cards/card-1")
+        .expect(200);
+
+      expect(response.body).toEqual({
+        message: "Card deleted successfully",
+      });
+      expect(cardMock.delete).toHaveBeenCalledWith({
+        where: { id: "card-1" },
+      });
     });
   });
 });

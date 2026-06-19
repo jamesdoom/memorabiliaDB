@@ -23,6 +23,7 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 - Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
 - Filters for player name, manufacturer, year range, card status, valuation status, and oldest valuation review.
 - Status tracking for `NEW`, `LISTED`, and `GRADED` cards.
+- Create, edit, and safely delete individual inventory records from the client.
 - Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
 - Manual valuation workflow for raw value, perfect-condition value, source, source URL, confidence, notes, and last-valued timestamp.
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
@@ -246,14 +247,16 @@ Current automated tests cover:
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
 - `GET /cards/recommendations`
+- `POST /cards` card creation and slug generation
+- `PATCH /cards/:id` card detail updates
 - `PATCH /cards/:id/status` success path
 - `PATCH /cards/:id/status` invalid status rejection
 - `PATCH /cards/:id/valuation` success path
 - `PATCH /cards/:id/valuation` validation rejection
+- `DELETE /cards/:id` card deletion
 
 ## Roadmap
 
-- Add more API tests for create/update/delete card flows.
 - Add frontend component tests for filtering, status changes, and upload feedback.
 - Improve the recommendations UI with richer card previews and sorting controls.
 - Deploy the client and API after the next feature set is complete.

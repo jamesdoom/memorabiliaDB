@@ -39,6 +39,36 @@ export async function fetchRecommendations(): Promise<RecommendationsResponse> {
   return requestJson<RecommendationsResponse>("/cards/recommendations");
 }
 
+export type CreateCardInput = Pick<
+  Card,
+  "playerName" | "sport" | "title" | "year" | "manufacturer" | "rookie"
+> &
+  Partial<
+    Pick<
+      Card,
+      | "cardNumber"
+      | "series"
+      | "serialNumber"
+      | "quantity"
+      | "location"
+      | "goodConditionValue"
+      | "perfectConditionValue"
+      | "valueSource"
+      | "valueConfidence"
+      | "lastValuedAt"
+    >
+  >;
+
+export async function createCard(input: CreateCardInput): Promise<Card> {
+  return requestJson<Card>("/cards", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+
 export async function updateCard(
   id: string,
   updates: Partial<Pick<Card, "imageFrontUrl" | "imageBackUrl">>,
@@ -119,6 +149,12 @@ export async function updateCardValuation(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(valuation),
+  });
+}
+
+export async function deleteCard(id: string): Promise<void> {
+  await requestJson<{ message: string }>(`/cards/${id}`, {
+    method: "DELETE",
   });
 }
 

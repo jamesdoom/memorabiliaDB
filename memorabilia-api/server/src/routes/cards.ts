@@ -13,6 +13,27 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
 
+function createCardSlug(card: {
+  playerName: string;
+  year: number;
+  manufacturer: string;
+  title: string;
+  cardNumber?: string | null;
+}) {
+  return [
+    card.playerName,
+    card.year,
+    card.manufacturer,
+    card.title,
+    card.cardNumber,
+  ]
+    .filter((part) => part !== null && part !== undefined && part !== "")
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 // --------------------
 // SUMMARY (still exists for now)
 // --------------------
@@ -366,11 +387,7 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const validatedData = cardSchema.parse(req.body);
-
-    const slug =
-      `${validatedData.playerName}-${validatedData.year}-${validatedData.manufacturer}`
-        .toLowerCase()
-        .replace(/\s+/g, "-");
+    const slug = createCardSlug(validatedData);
 
     const card = await prisma.card.create({
       data: {
@@ -379,7 +396,7 @@ router.post(
       },
     });
 
-    res.json(card);
+    res.status(201).json(card);
   }),
 );
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  deleteCard,
   updateCard,
   updateCardDetails,
   updateCardStatus,
@@ -16,6 +17,7 @@ type Props = {
   isFlipped: boolean;
   setIsFlipped: (v: boolean | ((prev: boolean) => boolean)) => void;
   loadCards: () => Promise<void>;
+  onDeleted: () => Promise<void>;
 };
 
 export default function CardModal({
@@ -26,9 +28,12 @@ export default function CardModal({
   isFlipped,
   setIsFlipped,
   loadCards,
+  onDeleted,
 }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [undoing, setUndoing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
   const [editingValuation, setEditingValuation] = useState(false);
@@ -54,7 +59,8 @@ export default function CardModal({
     valueConfidence: card.valueConfidence?.toString() ?? "",
     valueNotes: card.valueNotes ?? "",
   });
-  const busy = uploading || undoing || savingDetails || savingValuation;
+  const busy =
+    uploading || undoing || savingDetails || savingValuation || deleting;
   const lastValuedAt = card.lastValuedAt
     ? new Date(card.lastValuedAt).toLocaleDateString()
     : null;
@@ -95,9 +101,16 @@ export default function CardModal({
   }
 
   return (
-    <div className="modalOverlay" onClick={() => setSelectedCard(null)}>
+    <div
+      className="modalOverlay"
+      onClick={() => !busy && setSelectedCard(null)}
+    >
       <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-        <button className="modalClose" onClick={() => setSelectedCard(null)}>
+        <button
+          className="modalClose"
+          disabled={busy}
+          onClick={() => setSelectedCard(null)}
+        >
           X
         </button>
 
@@ -709,6 +722,69 @@ export default function CardModal({
               )}
             </div>
           )}
+
+          <div className="dangerZone">
+            <div>
+              <h3>Delete Card</h3>
+              <p>Permanently remove this card from the inventory.</p>
+            </div>
+
+            {!confirmingDelete ? (
+              <button
+                type="button"
+                className="dangerButton"
+                disabled={busy}
+                onClick={() => {
+                  setActionError(null);
+                  setConfirmingDelete(true);
+                }}
+              >
+                Delete card
+              </button>
+            ) : (
+              <div className="deleteConfirmation">
+                <p>
+                  Delete <strong>{card.playerName}</strong>? This cannot be
+                  undone.
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    className="secondaryButton"
+                    disabled={busy}
+                    onClick={() => setConfirmingDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="dangerButton"
+                    disabled={busy}
+                    onClick={async () => {
+                      setDeleting(true);
+                      setActionError(null);
+
+                      try {
+                        await deleteCard(card.id);
+                        await onDeleted();
+                      } catch (error) {
+                        console.error("Failed to delete card:", error);
+                        setActionError(
+                          error instanceof Error
+                            ? error.message
+                            : "Failed to delete card",
+                        );
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    {deleting ? "Deleting..." : "Delete permanently"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

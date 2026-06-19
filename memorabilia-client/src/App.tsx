@@ -5,6 +5,7 @@ import { fetchCards } from "./api";
 import Filters from "./components/Filters";
 import CardGrid from "./components/CardGrid";
 import CardModal from "./components/CardModal";
+import AddCardModal from "./components/AddCardModal";
 import CollectionValueCard from "./components/CollectionValueCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
@@ -21,11 +22,13 @@ function App() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<CardStatus | "">("");
   const [valuationFilter, setValuationFilter] = useState<ValuationFilter>("");
   const [sortMode, setSortMode] = useState<SortMode>("");
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [addingCard, setAddingCard] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -58,6 +61,7 @@ function App() {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelectedCard(null);
+        setAddingCard(false);
       }
     };
 
@@ -252,6 +256,28 @@ function App() {
                 resetFilters={resetFilters}
               />
 
+              <div className="inventoryToolbar">
+                <button
+                  type="button"
+                  className="primaryButton"
+                  onClick={() => {
+                    setNotice(null);
+                    setAddingCard(true);
+                  }}
+                >
+                  Add card
+                </button>
+              </div>
+
+              {notice && (
+                <div className="successAlert" role="status">
+                  <span>{notice}</span>
+                  <button type="button" onClick={() => setNotice(null)}>
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
               {loading && (
                 <div className="uploadSpinnerContainer">
                   <div className="uploadSpinner"></div>
@@ -300,6 +326,28 @@ function App() {
                   isFlipped={isFlipped}
                   setIsFlipped={setIsFlipped}
                   loadCards={loadCards}
+                  onDeleted={async () => {
+                    setSelectedCard(null);
+                    setNotice("Card deleted successfully.");
+
+                    if (page === 1) {
+                      await loadCards();
+                    } else {
+                      setPage(1);
+                    }
+                  }}
+                />
+              )}
+
+              {addingCard && (
+                <AddCardModal
+                  onClose={() => setAddingCard(false)}
+                  onCreated={async (card) => {
+                    setAddingCard(false);
+                    setSelectedCard(card);
+                    setNotice(`${card.playerName} was added successfully.`);
+                    await loadCards();
+                  }}
                 />
               )}
             </div>
