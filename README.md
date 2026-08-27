@@ -20,6 +20,10 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 
 - Inventory dashboard with total estimated raw value, perfect-condition value, and potential upside.
 - Seller dashboard snapshot with revenue, cost basis, marketplace fees, shipping, grading, supplies, net profit, and latest monthly profit.
+- Realized profit calculations that separate purchase spend from sold-card cost basis.
+- Profit breakdowns by month, marketplace, and linked card.
+- Seller transaction types for purchases, sales, refunds, returns, and adjustments.
+- Lot tracking fields for multi-card purchases or sales.
 - In-app CSV importer for purchase and sale ledgers with row validation, preview, and seller summary refresh.
 - Valuation progress summary showing valued cards, cards that still need valuation, average confidence, and latest valuation update.
 - Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
@@ -70,7 +74,7 @@ The client talks to the API through a centralized request layer in `memorabilia-
 
 Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
 
-Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases and sales are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, and grading return-on-investment from auditable seller events.
+Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases, sales, refunds, returns, and adjustments are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, and grading return-on-investment from auditable seller events.
 
 ## Valuation Workflow
 
@@ -84,7 +88,7 @@ The valuation workflow is designed to help a collector work through a large inve
 
 ## Seller Ledger Workflow
 
-The seller dashboard starts with a transaction ledger for purchases and sales:
+The seller dashboard starts with a transaction ledger for purchases, sales, refunds, returns, and adjustments:
 
 1. Keep `memorabilia-api/server/cards.csv` as the current inventory source.
 2. Create a separate CSV for purchases, sales, or marketplace exports.
@@ -97,16 +101,27 @@ The seller dashboard starts with a transaction ledger for purchases and sales:
 Supported transaction CSV columns:
 
 ```text
-type,occurredAt,amount,amountCents,cardId,cardSlug,quantity,marketplace,orderId,marketplaceFees,shippingCost,gradingCost,suppliesCost,notes
+type,occurredAt,amount,amountCents,costBasis,costBasisCents,cardId,cardSlug,quantity,lotName,lotCardCount,marketplace,orderId,marketplaceFees,shippingCost,gradingCost,suppliesCost,notes
 ```
 
 Notes:
 
-- `type` must be `PURCHASE` or `SALE`.
+- `type` must be `PURCHASE`, `SALE`, `REFUND`, `RETURN`, or `ADJUSTMENT`.
 - `occurredAt` accepts a date such as `2026-08-27`.
 - Use either `amount` in dollars, such as `24.99`, or `amountCents`, such as `2499`.
+- Use `costBasis` or `costBasisCents` on sales to record the realized inventory cost of the card or lot that sold.
 - `cardId` or `cardSlug` can link a transaction to an inventory card, but either may be left blank for now. The in-app CSV importer supports both.
+- `lotName` and `lotCardCount` can describe multi-card lots when one transaction covers several cards.
 - Cost columns use dollar amounts and are included in net profit.
+
+Profit reporting separates inventory purchasing from realized profit:
+
+- `purchaseSpendCents` tracks money spent acquiring inventory.
+- `realizedCostBasisCents` tracks the cost basis assigned to cards or lots when they sell.
+- Sales add revenue and realized cost basis.
+- Refunds and returns reduce revenue and reverse any provided cost basis.
+- Adjustments add positive profit-impacting corrections.
+- Net profit is calculated after realized cost basis, marketplace fees, shipping, grading, and supplies.
 
 ## Listing Workflow
 
@@ -299,6 +314,7 @@ Current automated tests cover:
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
 - `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
+- `GET /seller/summary` marketplace and linked-card profit breakdowns
 - `GET /seller/transactions` filtering, pagination, and linked card details
 - `POST /seller/transactions` transaction creation and validation rejection
 - `PATCH /seller/transactions/:id` transaction updates without defaulting untouched fields

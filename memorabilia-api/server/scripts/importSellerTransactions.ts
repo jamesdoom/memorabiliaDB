@@ -13,9 +13,13 @@ interface RawTransactionRow {
   occurredAt: string;
   amount?: string;
   amountCents?: string;
+  costBasis?: string;
+  costBasisCents?: string;
   cardId?: string;
   cardSlug?: string;
   quantity?: string;
+  lotName?: string;
+  lotCardCount?: string;
   marketplace?: string;
   orderId?: string;
   marketplaceFees?: string;
@@ -42,6 +46,13 @@ function parseOptionalPositiveInt(value?: string) {
 
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function parseNullablePositiveInt(value?: string) {
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 async function findCardId(row: RawTransactionRow) {
@@ -88,12 +99,17 @@ async function main() {
     const amountCents = row.amountCents
       ? Number(row.amountCents)
       : parseMoneyToCents(row.amount);
+    const costBasisCents = row.costBasisCents
+      ? Number(row.costBasisCents)
+      : parseMoneyToCents(row.costBasis);
 
     if (
-      !["PURCHASE", "SALE"].includes(type) ||
+      !["PURCHASE", "SALE", "REFUND", "RETURN", "ADJUSTMENT"].includes(type) ||
       Number.isNaN(occurredAt.getTime()) ||
       !Number.isInteger(amountCents) ||
-      amountCents < 0
+      amountCents < 0 ||
+      !Number.isInteger(costBasisCents) ||
+      costBasisCents < 0
     ) {
       console.warn("Skipping invalid transaction row:", row);
       skipped++;
@@ -105,8 +121,11 @@ async function main() {
         type: type as "PURCHASE" | "SALE",
         occurredAt,
         amountCents,
+        costBasisCents,
         cardId: await findCardId(row),
         quantity: parseOptionalPositiveInt(row.quantity),
+        lotName: row.lotName || null,
+        lotCardCount: parseNullablePositiveInt(row.lotCardCount),
         marketplace: row.marketplace || null,
         orderId: row.orderId || null,
         marketplaceFees: parseMoneyToCents(row.marketplaceFees),

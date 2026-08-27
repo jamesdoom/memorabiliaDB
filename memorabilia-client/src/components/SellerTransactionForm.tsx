@@ -17,8 +17,11 @@ const defaultForm = {
   type: "SALE" as SellerTransactionType,
   occurredAt: new Date().toISOString().slice(0, 10),
   amount: "",
+  costBasis: "",
   cardSlug: "",
   quantity: "1",
+  lotName: "",
+  lotCardCount: "",
   marketplace: "",
   orderId: "",
   marketplaceFees: "",
@@ -27,6 +30,14 @@ const defaultForm = {
   suppliesCost: "",
   notes: "",
 };
+
+const marketplaceFeePresets = [
+  { label: "No preset", marketplace: "", rate: 0 },
+  { label: "eBay 13.25%", marketplace: "eBay", rate: 0.1325 },
+  { label: "COMC 10%", marketplace: "COMC", rate: 0.1 },
+  { label: "Whatnot 11%", marketplace: "Whatnot", rate: 0.11 },
+  { label: "Mercari 10%", marketplace: "Mercari", rate: 0.1 },
+];
 
 function centsToDollars(cents: number | null | undefined) {
   if (!cents) return "";
@@ -51,8 +62,11 @@ function buildInitialForm(transaction?: SellerTransaction) {
     type: transaction.type,
     occurredAt: transaction.occurredAt.slice(0, 10),
     amount: centsToDollars(transaction.amountCents),
+    costBasis: centsToDollars(transaction.costBasisCents),
     cardSlug: transaction.card?.slug ?? "",
     quantity: transaction.quantity.toString(),
+    lotName: transaction.lotName ?? "",
+    lotCardCount: transaction.lotCardCount?.toString() ?? "",
     marketplace: transaction.marketplace ?? "",
     orderId: transaction.orderId ?? "",
     marketplaceFees: centsToDollars(transaction.marketplaceFees),
@@ -71,6 +85,7 @@ function SellerTransactionForm({
   onSubmit,
 }: SellerTransactionFormProps) {
   const [form, setForm] = useState(() => buildInitialForm(initialTransaction));
+  const [feePreset, setFeePreset] = useState("0");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,9 +99,14 @@ function SellerTransactionForm({
         type: form.type,
         occurredAt: form.occurredAt,
         amountCents: moneyToCents(form.amount),
+        costBasisCents: moneyToCents(form.costBasis),
         cardId: defaultCardId ?? initialTransaction?.cardId ?? null,
         cardSlug: defaultCardId ? null : optionalText(form.cardSlug),
         quantity: Number(form.quantity),
+        lotName: optionalText(form.lotName),
+        lotCardCount: form.lotCardCount.trim()
+          ? Number(form.lotCardCount)
+          : null,
         marketplace: optionalText(form.marketplace),
         orderId: optionalText(form.orderId),
         marketplaceFees: moneyToCents(form.marketplaceFees),
@@ -125,6 +145,9 @@ function SellerTransactionForm({
           >
             <option value="SALE">Sale</option>
             <option value="PURCHASE">Purchase</option>
+            <option value="REFUND">Refund</option>
+            <option value="RETURN">Return</option>
+            <option value="ADJUSTMENT">Adjustment</option>
           </select>
         </label>
 
@@ -155,6 +178,22 @@ function SellerTransactionForm({
               setForm((current) => ({
                 ...current,
                 amount: event.target.value,
+              }))
+            }
+          />
+        </label>
+
+        <label>
+          Cost basis
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.costBasis}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                costBasis: event.target.value,
               }))
             }
           />
@@ -193,6 +232,35 @@ function SellerTransactionForm({
         </label>
 
         <label>
+          Lot name
+          <input
+            type="text"
+            value={form.lotName}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                lotName: event.target.value,
+              }))
+            }
+          />
+        </label>
+
+        <label>
+          Lot card count
+          <input
+            type="number"
+            min="1"
+            value={form.lotCardCount}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                lotCardCount: event.target.value,
+              }))
+            }
+          />
+        </label>
+
+        <label>
           Marketplace
           <input
             type="text"
@@ -204,6 +272,33 @@ function SellerTransactionForm({
               }))
             }
           />
+        </label>
+
+        <label>
+          Fee preset
+          <select
+            value={feePreset}
+            onChange={(event) => {
+              setFeePreset(event.target.value);
+              const preset = marketplaceFeePresets[Number(event.target.value)];
+              if (!preset || preset.rate === 0) return;
+
+              setForm((current) => ({
+                ...current,
+                marketplace: preset.marketplace,
+                marketplaceFees: (
+                  (moneyToCents(current.amount) * preset.rate) /
+                  100
+                ).toFixed(2),
+              }));
+            }}
+          >
+            {marketplaceFeePresets.map((preset, index) => (
+              <option key={preset.label} value={index}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>

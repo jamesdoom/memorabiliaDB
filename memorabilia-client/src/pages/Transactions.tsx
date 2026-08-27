@@ -28,11 +28,20 @@ function formatDate(date: string) {
 
 function totalCosts(transaction: SellerTransaction) {
   return (
+    transaction.costBasisCents +
     transaction.marketplaceFees +
     transaction.shippingCost +
     transaction.gradingCost +
     transaction.suppliesCost
   );
+}
+
+function netImpact(transaction: SellerTransaction) {
+  if (transaction.type === "PURCHASE") return 0;
+  if (transaction.type === "ADJUSTMENT") return transaction.amountCents;
+
+  const sign = transaction.type === "SALE" ? 1 : -1;
+  return sign * transaction.amountCents - totalCosts(transaction);
 }
 
 function Transactions() {
@@ -137,6 +146,9 @@ function Transactions() {
               <option value="">All types</option>
               <option value="SALE">Sales</option>
               <option value="PURCHASE">Purchases</option>
+              <option value="REFUND">Refunds</option>
+              <option value="RETURN">Returns</option>
+              <option value="ADJUSTMENT">Adjustments</option>
             </select>
             <input
               type="text"
@@ -180,7 +192,9 @@ function Transactions() {
                   <th>Card</th>
                   <th>Marketplace</th>
                   <th>Amount</th>
+                  <th>Cost Basis</th>
                   <th>Costs</th>
+                  <th>Net</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -209,7 +223,11 @@ function Transactions() {
                     </td>
                     <td>{transaction.marketplace ?? "-"}</td>
                     <td>{formatCurrency(transaction.amountCents)}</td>
-                    <td>{formatCurrency(totalCosts(transaction))}</td>
+                    <td>{formatCurrency(transaction.costBasisCents)}</td>
+                    <td>
+                      {formatCurrency(totalCosts(transaction) - transaction.costBasisCents)}
+                    </td>
+                    <td>{formatCurrency(netImpact(transaction))}</td>
                     <td>
                       <div className="tableActions">
                         <button

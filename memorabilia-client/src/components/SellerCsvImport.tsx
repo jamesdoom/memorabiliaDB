@@ -16,6 +16,13 @@ type ParsedRow = {
 };
 
 const REQUIRED_COLUMNS = ["type", "occurredAt"];
+const VALID_TYPES = new Set([
+  "PURCHASE",
+  "SALE",
+  "REFUND",
+  "RETURN",
+  "ADJUSTMENT",
+]);
 
 function splitCsvLine(line: string) {
   const values: string[] = [];
@@ -114,15 +121,21 @@ function parseTransactionsCsv(text: string, sourceFile: string): ParsedRow[] {
     const parsedAmountCents = row.amountCents
       ? Number(row.amountCents)
       : parseMoneyToCents(row.amount);
+    const parsedCostBasisCents = row.costBasisCents
+      ? Number(row.costBasisCents)
+      : parseMoneyToCents(row.costBasis);
     const marketplaceFees = parseMoneyToCents(row.marketplaceFees);
     const shippingCost = parseMoneyToCents(row.shippingCost);
     const gradingCost = parseMoneyToCents(row.gradingCost);
     const suppliesCost = parseMoneyToCents(row.suppliesCost);
     const quantity = parsePositiveInt(row.quantity);
+    const lotCardCount = row.lotCardCount?.trim()
+      ? Number(row.lotCardCount)
+      : null;
     const occurredAt = row.occurredAt?.trim();
 
-    if (type !== "PURCHASE" && type !== "SALE") {
-      errors.push("type must be PURCHASE or SALE");
+    if (!VALID_TYPES.has(type ?? "")) {
+      errors.push("type must be PURCHASE, SALE, REFUND, RETURN, or ADJUSTMENT");
     }
 
     if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
@@ -136,14 +149,30 @@ function parseTransactionsCsv(text: string, sourceFile: string): ParsedRow[] {
     ) {
       errors.push("amount or amountCents must be a valid non-negative amount");
     }
+    if (
+      parsedCostBasisCents === null ||
+      !Number.isInteger(parsedCostBasisCents) ||
+      parsedCostBasisCents < 0
+    ) {
+      errors.push(
+        "costBasis or costBasisCents must be a valid non-negative amount",
+      );
+    }
 
     if (marketplaceFees === null) errors.push("marketplaceFees is invalid");
     if (shippingCost === null) errors.push("shippingCost is invalid");
     if (gradingCost === null) errors.push("gradingCost is invalid");
     if (suppliesCost === null) errors.push("suppliesCost is invalid");
     if (quantity === null) errors.push("quantity must be a positive integer");
+    if (
+      lotCardCount !== null &&
+      (!Number.isInteger(lotCardCount) || lotCardCount < 1)
+    ) {
+      errors.push("lotCardCount must be a positive integer");
+    }
 
     const amountCents = parsedAmountCents ?? 0;
+    const costBasisCents = parsedCostBasisCents ?? 0;
 
     return {
       rowNumber: index + 2,
@@ -153,9 +182,12 @@ function parseTransactionsCsv(text: string, sourceFile: string): ParsedRow[] {
               type: type as SellerTransactionType,
               occurredAt,
               amountCents,
+              costBasisCents,
               cardId: getOptionalValue(row, "cardId"),
               cardSlug: getOptionalValue(row, "cardSlug"),
               quantity: quantity as number,
+              lotName: getOptionalValue(row, "lotName"),
+              lotCardCount,
               marketplace: getOptionalValue(row, "marketplace"),
               orderId: getOptionalValue(row, "orderId"),
               marketplaceFees: marketplaceFees as number,

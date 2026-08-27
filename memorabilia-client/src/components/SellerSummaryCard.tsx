@@ -15,6 +15,8 @@ function formatCurrency(cents: number) {
 
 function SellerSummaryCard({ summary, loading, error }: SellerSummaryCardProps) {
   const latestMonth = summary?.monthly[0];
+  const topMarketplace = summary?.byMarketplace[0];
+  const topCard = summary?.byCard[0];
 
   return (
     <section className="sellerSummary" aria-labelledby="seller-summary-title">
@@ -42,7 +44,7 @@ function SellerSummaryCard({ summary, loading, error }: SellerSummaryCardProps) 
               <span>All-in Costs</span>
               <strong>
                 {formatCurrency(
-                  summary.totals.purchaseCostCents +
+                  summary.totals.realizedCostBasisCents +
                     summary.totals.marketplaceFeesCents +
                     summary.totals.shippingCostCents +
                     summary.totals.gradingCostCents +
@@ -65,11 +67,46 @@ function SellerSummaryCard({ summary, loading, error }: SellerSummaryCardProps) 
           </div>
 
           <div className="sellerCostBreakdown">
-            <span>Inventory {formatCurrency(summary.totals.purchaseCostCents)}</span>
+            <span>
+              Realized basis{" "}
+              {formatCurrency(summary.totals.realizedCostBasisCents)}
+            </span>
+            <span>
+              Purchase spend {formatCurrency(summary.totals.purchaseSpendCents)}
+            </span>
+            <span>Refunds {formatCurrency(summary.totals.refundCents)}</span>
+            <span>
+              Adjustments {formatCurrency(summary.totals.adjustmentCents)}
+            </span>
             <span>Fees {formatCurrency(summary.totals.marketplaceFeesCents)}</span>
             <span>Shipping {formatCurrency(summary.totals.shippingCostCents)}</span>
             <span>Grading {formatCurrency(summary.totals.gradingCostCents)}</span>
             <span>Supplies {formatCurrency(summary.totals.suppliesCostCents)}</span>
+          </div>
+
+          <div className="sellerInsightGrid">
+            <div>
+              <span>Top Marketplace</span>
+              <strong>{topMarketplace?.marketplace ?? "None"}</strong>
+              <small>
+                {topMarketplace
+                  ? formatCurrency(topMarketplace.netProfitCents)
+                  : formatCurrency(0)}
+              </small>
+            </div>
+            <div>
+              <span>Top Card</span>
+              <strong>
+                {topCard
+                  ? `${topCard.playerName} ${topCard.year}`
+                  : "No linked sales"}
+              </strong>
+              <small>
+                {topCard
+                  ? formatCurrency(topCard.netProfitCents)
+                  : formatCurrency(0)}
+              </small>
+            </div>
           </div>
         </>
       )}

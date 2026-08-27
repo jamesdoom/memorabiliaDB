@@ -80,7 +80,10 @@ export type RecommendationsResponse = {
 
 export type SellerTotals = {
   revenueCents: number;
-  purchaseCostCents: number;
+  refundCents: number;
+  adjustmentCents: number;
+  purchaseSpendCents: number;
+  realizedCostBasisCents: number;
   marketplaceFeesCents: number;
   shippingCostCents: number;
   gradingCostCents: number;
@@ -92,13 +95,32 @@ export type MonthlySellerTotals = SellerTotals & {
   month: string;
 };
 
+export type MarketplaceSellerTotals = SellerTotals & {
+  marketplace: string;
+};
+
+export type CardSellerTotals = SellerTotals & {
+  cardId: string;
+  playerName: string;
+  title: string;
+  year: number;
+  manufacturer: string;
+};
+
 export type SellerSummary = {
   transactionCount: number;
   totals: SellerTotals;
   monthly: MonthlySellerTotals[];
+  byMarketplace: MarketplaceSellerTotals[];
+  byCard: CardSellerTotals[];
 };
 
-export type SellerTransactionType = "PURCHASE" | "SALE";
+export type SellerTransactionType =
+  | "PURCHASE"
+  | "SALE"
+  | "REFUND"
+  | "RETURN"
+  | "ADJUSTMENT";
 
 export type SellerTransactionImportInput = {
   cardId?: string | null;
@@ -107,6 +129,9 @@ export type SellerTransactionImportInput = {
   occurredAt: string;
   quantity: number;
   amountCents: number;
+  costBasisCents: number;
+  lotName?: string | null;
+  lotCardCount?: number | null;
   marketplace?: string | null;
   orderId?: string | null;
   marketplaceFees: number;

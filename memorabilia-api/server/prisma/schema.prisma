@@ -23,6 +23,9 @@ enum CardStatus {
 enum SellerTransactionType {
   PURCHASE
   SALE
+  REFUND
+  RETURN
+  ADJUSTMENT
 }
 
 model Card {
@@ -75,6 +78,9 @@ model SellerTransaction {
   occurredAt      DateTime
   quantity        Int                   @default(1)
   amountCents     Int
+  costBasisCents  Int                   @default(0)
+  lotName         String?
+  lotCardCount    Int?
   marketplace     String?
   orderId         String?
   marketplaceFees Int                   @default(0)

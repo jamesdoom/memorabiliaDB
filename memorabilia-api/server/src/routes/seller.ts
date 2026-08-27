@@ -16,38 +16,109 @@ function toMonthKey(date: Date) {
 
 function buildSummary(
   transactions: Array<{
-    type: "PURCHASE" | "SALE";
+    type: "PURCHASE" | "SALE" | "REFUND" | "RETURN" | "ADJUSTMENT";
     occurredAt: Date;
     amountCents: number;
+    costBasisCents: number;
+    marketplace: string | null;
     marketplaceFees: number;
     shippingCost: number;
     gradingCost: number;
     suppliesCost: number;
+    card: {
+      id: string;
+      playerName: string;
+      title: string;
+      year: number;
+      manufacturer: string;
+    } | null;
   }>,
 ) {
+  type ProfitBucket = {
+    revenueCents: number;
+    refundCents: number;
+    adjustmentCents: number;
+    purchaseSpendCents: number;
+    realizedCostBasisCents: number;
+    marketplaceFeesCents: number;
+    shippingCostCents: number;
+    gradingCostCents: number;
+    suppliesCostCents: number;
+    netProfitCents: number;
+  };
+
+  function emptyBucket(): ProfitBucket {
+    return {
+      revenueCents: 0,
+      refundCents: 0,
+      adjustmentCents: 0,
+      purchaseSpendCents: 0,
+      realizedCostBasisCents: 0,
+      marketplaceFeesCents: 0,
+      shippingCostCents: 0,
+      gradingCostCents: 0,
+      suppliesCostCents: 0,
+      netProfitCents: 0,
+    };
+  }
+
+  function applyTransaction(bucket: ProfitBucket, transaction: (typeof transactions)[number]) {
+    if (transaction.type === "SALE") {
+      bucket.revenueCents += transaction.amountCents;
+      bucket.realizedCostBasisCents += transaction.costBasisCents;
+    }
+
+    if (transaction.type === "PURCHASE") {
+      bucket.purchaseSpendCents += transaction.amountCents;
+    }
+
+    if (transaction.type === "REFUND" || transaction.type === "RETURN") {
+      bucket.refundCents += transaction.amountCents;
+      bucket.realizedCostBasisCents -= transaction.costBasisCents;
+    }
+
+    if (transaction.type === "ADJUSTMENT") {
+      bucket.adjustmentCents += transaction.amountCents;
+    }
+
+    bucket.marketplaceFeesCents += transaction.marketplaceFees;
+    bucket.shippingCostCents += transaction.shippingCost;
+    bucket.gradingCostCents += transaction.gradingCost;
+    bucket.suppliesCostCents += transaction.suppliesCost;
+  }
+
+  function finalizeBucket(bucket: ProfitBucket) {
+    bucket.netProfitCents =
+      bucket.revenueCents -
+      bucket.refundCents +
+      bucket.adjustmentCents -
+      bucket.realizedCostBasisCents -
+      bucket.marketplaceFeesCents -
+      bucket.shippingCostCents -
+      bucket.gradingCostCents -
+      bucket.suppliesCostCents;
+  }
+
   const monthly = new Map<
     string,
-    {
+    ProfitBucket & {
       month: string;
-      revenueCents: number;
-      purchaseCostCents: number;
-      marketplaceFeesCents: number;
-      shippingCostCents: number;
-      gradingCostCents: number;
-      suppliesCostCents: number;
-      netProfitCents: number;
     }
   >();
 
-  const totals = {
-    revenueCents: 0,
-    purchaseCostCents: 0,
-    marketplaceFeesCents: 0,
-    shippingCostCents: 0,
-    gradingCostCents: 0,
-    suppliesCostCents: 0,
-    netProfitCents: 0,
-  };
+  const byMarketplace = new Map<string, ProfitBucket & { marketplace: string }>();
+  const byCard = new Map<
+    string,
+    ProfitBucket & {
+      cardId: string;
+      playerName: string;
+      title: string;
+      year: number;
+      manufacturer: string;
+    }
+  >();
+
+  const totals = emptyBucket();
 
   for (const transaction of transactions) {
     const month = toMonthKey(transaction.occurredAt);
@@ -55,58 +126,64 @@ function buildSummary(
       monthly.get(month) ??
       {
         month,
-        revenueCents: 0,
-        purchaseCostCents: 0,
-        marketplaceFeesCents: 0,
-        shippingCostCents: 0,
-        gradingCostCents: 0,
-        suppliesCostCents: 0,
-        netProfitCents: 0,
+        ...emptyBucket(),
+      };
+    const marketplaceName = transaction.marketplace ?? "Unassigned";
+    const marketplaceTotals =
+      byMarketplace.get(marketplaceName) ??
+      {
+        marketplace: marketplaceName,
+        ...emptyBucket(),
       };
 
-    if (transaction.type === "SALE") {
-      totals.revenueCents += transaction.amountCents;
-      monthlyTotals.revenueCents += transaction.amountCents;
-    } else {
-      totals.purchaseCostCents += transaction.amountCents;
-      monthlyTotals.purchaseCostCents += transaction.amountCents;
-    }
-
-    totals.marketplaceFeesCents += transaction.marketplaceFees;
-    totals.shippingCostCents += transaction.shippingCost;
-    totals.gradingCostCents += transaction.gradingCost;
-    totals.suppliesCostCents += transaction.suppliesCost;
-
-    monthlyTotals.marketplaceFeesCents += transaction.marketplaceFees;
-    monthlyTotals.shippingCostCents += transaction.shippingCost;
-    monthlyTotals.gradingCostCents += transaction.gradingCost;
-    monthlyTotals.suppliesCostCents += transaction.suppliesCost;
+    applyTransaction(totals, transaction);
+    applyTransaction(monthlyTotals, transaction);
+    applyTransaction(marketplaceTotals, transaction);
 
     monthly.set(month, monthlyTotals);
+    byMarketplace.set(marketplaceName, marketplaceTotals);
+
+    if (transaction.card) {
+      const cardTotals =
+        byCard.get(transaction.card.id) ??
+        {
+          cardId: transaction.card.id,
+          playerName: transaction.card.playerName,
+          title: transaction.card.title,
+          year: transaction.card.year,
+          manufacturer: transaction.card.manufacturer,
+          ...emptyBucket(),
+        };
+
+      applyTransaction(cardTotals, transaction);
+      byCard.set(transaction.card.id, cardTotals);
+    }
   }
 
-  totals.netProfitCents =
-    totals.revenueCents -
-    totals.purchaseCostCents -
-    totals.marketplaceFeesCents -
-    totals.shippingCostCents -
-    totals.gradingCostCents -
-    totals.suppliesCostCents;
+  finalizeBucket(totals);
 
   for (const month of monthly.values()) {
-    month.netProfitCents =
-      month.revenueCents -
-      month.purchaseCostCents -
-      month.marketplaceFeesCents -
-      month.shippingCostCents -
-      month.gradingCostCents -
-      month.suppliesCostCents;
+    finalizeBucket(month);
+  }
+
+  for (const marketplace of byMarketplace.values()) {
+    finalizeBucket(marketplace);
+  }
+
+  for (const card of byCard.values()) {
+    finalizeBucket(card);
   }
 
   return {
     totals,
     monthly: Array.from(monthly.values()).sort((a, b) =>
       b.month.localeCompare(a.month),
+    ),
+    byMarketplace: Array.from(byMarketplace.values()).sort(
+      (a, b) => b.netProfitCents - a.netProfitCents,
+    ),
+    byCard: Array.from(byCard.values()).sort(
+      (a, b) => b.netProfitCents - a.netProfitCents,
     ),
   };
 }
@@ -177,6 +254,17 @@ router.get(
   "/summary",
   asyncHandler(async (_req, res) => {
     const transactions = await prisma.sellerTransaction.findMany({
+      include: {
+        card: {
+          select: {
+            id: true,
+            playerName: true,
+            title: true,
+            year: true,
+            manufacturer: true,
+          },
+        },
+      },
       orderBy: {
         occurredAt: "desc",
       },
@@ -195,7 +283,11 @@ router.get(
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
     const type =
-      req.query.type === "PURCHASE" || req.query.type === "SALE"
+      req.query.type === "PURCHASE" ||
+      req.query.type === "SALE" ||
+      req.query.type === "REFUND" ||
+      req.query.type === "RETURN" ||
+      req.query.type === "ADJUSTMENT"
         ? (req.query.type as SellerTransactionType)
         : undefined;
     const marketplace = req.query.marketplace

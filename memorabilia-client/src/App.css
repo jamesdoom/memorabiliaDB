@@ -188,6 +188,35 @@ HEADER
   border-top: 1px solid var(--yankees-border);
 }
 
+.sellerInsightGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sellerInsightGrid div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.sellerInsightGrid span,
+.sellerInsightGrid small {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.sellerInsightGrid strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
 .sellerMuted,
 .sellerError,
 .sellerSuccess {
@@ -1259,6 +1288,7 @@ OPERATIONS
     flex-direction: column;
   }
 
+  .sellerInsightGrid,
   .sellerMetricGrid,
   .sellerPreview {
     grid-template-columns: 1fr;
