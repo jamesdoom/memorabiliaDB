@@ -7,6 +7,7 @@ import CardGrid from "./components/CardGrid";
 import CardModal from "./components/CardModal";
 import AddCardModal from "./components/AddCardModal";
 import CollectionValueCard from "./components/CollectionValueCard";
+import SellerCsvImport from "./components/SellerCsvImport";
 import SellerSummaryCard from "./components/SellerSummaryCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
@@ -140,35 +141,25 @@ function App() {
     loadCards();
   }, [loadCards]);
 
-  useEffect(() => {
-    let ignore = false;
+  const loadSellerSummary = useCallback(async () => {
+    setSellerLoading(true);
+    setSellerError(null);
 
-    async function loadSellerSummary() {
-      setSellerLoading(true);
-      setSellerError(null);
-
-      try {
-        const response = await fetchSellerSummary();
-        if (!ignore) setSellerSummary(response);
-      } catch (error) {
-        if (!ignore) {
-          setSellerError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load seller summary",
-          );
-        }
-      } finally {
-        if (!ignore) setSellerLoading(false);
-      }
+    try {
+      const response = await fetchSellerSummary();
+      setSellerSummary(response);
+    } catch (error) {
+      setSellerError(
+        error instanceof Error ? error.message : "Failed to load seller summary",
+      );
+    } finally {
+      setSellerLoading(false);
     }
-
-    loadSellerSummary();
-
-    return () => {
-      ignore = true;
-    };
   }, []);
+
+  useEffect(() => {
+    loadSellerSummary();
+  }, [loadSellerSummary]);
 
   const resetFilters = () => {
     setManufacturer("");
@@ -204,6 +195,8 @@ function App() {
                     loading={sellerLoading}
                     error={sellerError}
                   />
+
+                  <SellerCsvImport onImported={loadSellerSummary} />
 
                   {summary && (
                     <>

@@ -3,12 +3,19 @@ import type { Express } from "express";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
+  card: {
+    findMany: vi.fn(),
+  },
   sellerTransaction: {
     create: vi.fn(),
     createMany: vi.fn(),
     findMany: vi.fn(),
   },
 }));
+
+const cardMock = prismaMock.card as {
+  findMany: ReturnType<typeof vi.fn>;
+};
 
 const transactionMock = prismaMock.sellerTransaction as {
   create: ReturnType<typeof vi.fn>;
@@ -26,7 +33,7 @@ beforeAll(async () => {
         count: vi.fn(),
         create: vi.fn(),
         delete: vi.fn(),
-        findMany: vi.fn(),
+        findMany: prismaMock.card.findMany,
         groupBy: vi.fn(),
         update: vi.fn(),
       },
@@ -145,6 +152,7 @@ describe("seller routes", () => {
         data: {
           type: "SALE",
           occurredAt: new Date("2026-08-20"),
+          cardId: null,
           quantity: 1,
           amountCents: 10000,
           marketplaceFees: 1300,
@@ -166,6 +174,111 @@ describe("seller routes", () => {
         .expect(400);
 
       expect(transactionMock.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("POST /seller/transactions/import", () => {
+    it("imports seller transactions in a batch", async () => {
+      transactionMock.createMany.mockResolvedValue({ count: 2 });
+
+      const response = await request(app)
+        .post("/seller/transactions/import")
+        .send({
+          transactions: [
+            {
+              type: "PURCHASE",
+              occurredAt: "2026-08-10",
+              amountCents: 3000,
+              sourceFile: "purchases.csv",
+            },
+            {
+              type: "SALE",
+              occurredAt: "2026-08-20",
+              amountCents: 10000,
+              marketplaceFees: 1300,
+              shippingCost: 500,
+              sourceFile: "sales.csv",
+            },
+          ],
+        })
+        .expect(201);
+
+      expect(response.body).toEqual({
+        imported: 2,
+      });
+      expect(transactionMock.createMany).toHaveBeenCalledWith({
+        data: [
+          {
+            type: "PURCHASE",
+            occurredAt: new Date("2026-08-10"),
+            cardId: null,
+            quantity: 1,
+            amountCents: 3000,
+            marketplaceFees: 0,
+            shippingCost: 0,
+            gradingCost: 0,
+            suppliesCost: 0,
+            sourceFile: "purchases.csv",
+          },
+          {
+            type: "SALE",
+            occurredAt: new Date("2026-08-20"),
+            cardId: null,
+            quantity: 1,
+            amountCents: 10000,
+            marketplaceFees: 1300,
+            shippingCost: 500,
+            gradingCost: 0,
+            suppliesCost: 0,
+            sourceFile: "sales.csv",
+          },
+        ],
+        skipDuplicates: true,
+      });
+    });
+
+    it("links imported rows by card slug when provided", async () => {
+      cardMock.findMany.mockResolvedValue([
+        {
+          id: "card-1",
+          slug: "ken-griffey-jr-1989-upper-deck-rookie-card-1",
+        },
+      ]);
+      transactionMock.createMany.mockResolvedValue({ count: 1 });
+
+      const response = await request(app)
+        .post("/seller/transactions/import")
+        .send({
+          transactions: [
+            {
+              type: "SALE",
+              occurredAt: "2026-08-20",
+              amountCents: 10000,
+              cardSlug: "ken-griffey-jr-1989-upper-deck-rookie-card-1",
+            },
+          ],
+        })
+        .expect(201);
+
+      expect(response.body).toEqual({
+        imported: 1,
+      });
+      expect(transactionMock.createMany).toHaveBeenCalledWith({
+        data: [
+          {
+            type: "SALE",
+            occurredAt: new Date("2026-08-20"),
+            cardId: "card-1",
+            quantity: 1,
+            amountCents: 10000,
+            marketplaceFees: 0,
+            shippingCost: 0,
+            gradingCost: 0,
+            suppliesCost: 0,
+          },
+        ],
+        skipDuplicates: true,
+      });
     });
   });
 });

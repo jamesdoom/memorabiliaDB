@@ -20,6 +20,7 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 
 - Inventory dashboard with total estimated raw value, perfect-condition value, and potential upside.
 - Seller dashboard snapshot with revenue, cost basis, marketplace fees, shipping, grading, supplies, net profit, and latest monthly profit.
+- In-app CSV importer for purchase and sale ledgers with row validation, preview, and seller summary refresh.
 - Valuation progress summary showing valued cards, cards that still need valuation, average confidence, and latest valuation update.
 - Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
 - Filters for player name, manufacturer, year range, card status, valuation status, and oldest valuation review.
@@ -83,7 +84,7 @@ The seller dashboard starts with a transaction ledger for purchases and sales:
 
 1. Keep `memorabilia-api/server/cards.csv` as the current inventory source.
 2. Create a separate CSV for purchases, sales, or marketplace exports.
-3. Import the ledger CSV with `npm run import:transactions -- ./your-transactions.csv`.
+3. Import the ledger CSV from the dashboard with the `Purchases And Sales` importer, or use `npm run import:transactions -- ./your-transactions.csv`.
 4. Open the client dashboard to review revenue, purchase cost, fees, shipping, grading, supplies, and net profit.
 5. Use the monthly totals as the foundation for future profit and tax reporting.
 
@@ -98,7 +99,7 @@ Notes:
 - `type` must be `PURCHASE` or `SALE`.
 - `occurredAt` accepts a date such as `2026-08-27`.
 - Use either `amount` in dollars, such as `24.99`, or `amountCents`, such as `2499`.
-- `cardId` or `cardSlug` can link a transaction to an inventory card, but either may be left blank for now.
+- `cardId` or `cardSlug` can link a transaction to an inventory card, but either may be left blank for now. The in-app CSV importer supports both.
 - Cost columns use dollar amounts and are included in net profit.
 
 ## Project Structure

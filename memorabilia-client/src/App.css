@@ -86,12 +86,30 @@ HEADER
   text-align: left;
 }
 
+.sellerImport {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: 8px;
+  background: white;
+  color: var(--yankees-text);
+  text-align: left;
+}
+
 .sellerSummaryHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.sellerImportHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
 .sellerEyebrow {
@@ -108,6 +126,12 @@ HEADER
   font-size: 20px;
 }
 
+.sellerImport h2 {
+  margin: 0;
+  color: var(--yankees-text);
+  font-size: 20px;
+}
+
 .sellerTransactionCount {
   flex: 0 0 auto;
   padding: 6px 8px;
@@ -116,6 +140,15 @@ HEADER
   color: #374151;
   font-size: 12px;
   font-weight: 600;
+}
+
+.sellerFilePicker {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.sellerFilePicker input {
+  display: none;
 }
 
 .sellerMetricGrid {
@@ -156,7 +189,8 @@ HEADER
 }
 
 .sellerMuted,
-.sellerError {
+.sellerError,
+.sellerSuccess {
   margin: 0;
   font-size: 13px;
 }
@@ -167,6 +201,60 @@ HEADER
 
 .sellerError {
   color: #991b1b;
+}
+
+.sellerSuccess {
+  color: #166534;
+}
+
+.sellerImportIssues {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+}
+
+.sellerImportIssues p {
+  margin: 0 0 6px;
+  color: #991b1b;
+  font-size: 12px;
+}
+
+.sellerImportIssues p:last-child {
+  margin-bottom: 0;
+}
+
+.sellerPreview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sellerPreview div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.sellerPreview span,
+.sellerPreview small {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.sellerPreview strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+.sellerImportButton {
+  margin-top: 12px;
 }
 
 /* Navigation */
@@ -1019,11 +1107,13 @@ PAGINATION
 }
 
 @media (max-width: 520px) {
-  .sellerSummaryHeader {
+  .sellerSummaryHeader,
+  .sellerImportHeader {
     flex-direction: column;
   }
 
-  .sellerMetricGrid {
+  .sellerMetricGrid,
+  .sellerPreview {
     grid-template-columns: 1fr;
   }
 }

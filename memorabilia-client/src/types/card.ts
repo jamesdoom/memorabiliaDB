@@ -91,3 +91,22 @@ export type SellerSummary = {
   totals: SellerTotals;
   monthly: MonthlySellerTotals[];
 };
+
+export type SellerTransactionType = "PURCHASE" | "SALE";
+
+export type SellerTransactionImportInput = {
+  cardId?: string | null;
+  cardSlug?: string | null;
+  type: SellerTransactionType;
+  occurredAt: string;
+  quantity: number;
+  amountCents: number;
+  marketplace?: string | null;
+  orderId?: string | null;
+  marketplaceFees: number;
+  shippingCost: number;
+  gradingCost: number;
+  suppliesCost: number;
+  notes?: string | null;
+  sourceFile?: string | null;
+};

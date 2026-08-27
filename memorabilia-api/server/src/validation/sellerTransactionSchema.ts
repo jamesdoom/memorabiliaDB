@@ -4,6 +4,7 @@ export const sellerTransactionTypeSchema = z.enum(["PURCHASE", "SALE"]);
 
 export const sellerTransactionSchema = z.object({
   cardId: z.string().uuid().optional().nullable(),
+  cardSlug: z.string().min(1).optional().nullable(),
   type: sellerTransactionTypeSchema,
   occurredAt: z.coerce.date(),
   quantity: z.number().int().min(1).default(1),

@@ -4,6 +4,7 @@ import type {
   CardsResponse,
   RecommendationsResponse,
   SellerSummary,
+  SellerTransactionImportInput,
   Summary,
 } from "./types/card";
 
@@ -42,6 +43,18 @@ export async function fetchRecommendations(): Promise<RecommendationsResponse> {
 
 export async function fetchSellerSummary(): Promise<SellerSummary> {
   return requestJson<SellerSummary>("/seller/summary");
+}
+
+export async function importSellerTransactions(
+  transactions: SellerTransactionImportInput[],
+): Promise<{ imported: number }> {
+  return requestJson<{ imported: number }>("/seller/transactions/import", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ transactions }),
+  });
 }
 
 export type CreateCardInput = Pick<

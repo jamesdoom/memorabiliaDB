@@ -109,6 +109,50 @@ function buildSummary(
   };
 }
 
+async function resolveCardIdsBySlug(
+  transactions: Array<{ cardSlug?: string | null }>,
+) {
+  const slugs = Array.from(
+    new Set(
+      transactions
+        .map((transaction) => transaction.cardSlug)
+        .filter((slug): slug is string => Boolean(slug)),
+    ),
+  );
+
+  if (slugs.length === 0) return new Map<string, string>();
+
+  const cards = await prisma.card.findMany({
+    where: {
+      slug: {
+        in: slugs,
+      },
+    },
+    select: {
+      id: true,
+      slug: true,
+    },
+  });
+
+  return new Map(cards.map((card) => [card.slug, card.id]));
+}
+
+async function prepareTransactionData<T extends { cardSlug?: string | null }>(
+  transactions: T[],
+) {
+  const cardIdsBySlug = await resolveCardIdsBySlug(transactions);
+
+  return transactions.map(({ cardSlug, ...transaction }) => ({
+    ...transaction,
+    cardId:
+      "cardId" in transaction && transaction.cardId
+        ? transaction.cardId
+        : cardSlug
+          ? cardIdsBySlug.get(cardSlug) ?? null
+          : null,
+  }));
+}
+
 router.get(
   "/summary",
   asyncHandler(async (_req, res) => {
@@ -129,9 +173,10 @@ router.post(
   "/transactions",
   asyncHandler(async (req, res) => {
     const validatedData = sellerTransactionSchema.parse(req.body);
+    const [transactionData] = await prepareTransactionData([validatedData]);
 
     const transaction = await prisma.sellerTransaction.create({
-      data: validatedData,
+      data: transactionData,
     });
 
     res.status(201).json(transaction);
@@ -142,9 +187,10 @@ router.post(
   "/transactions/import",
   asyncHandler(async (req, res) => {
     const { transactions } = sellerTransactionsImportSchema.parse(req.body);
+    const transactionData = await prepareTransactionData(transactions);
 
     const result = await prisma.sellerTransaction.createMany({
-      data: transactions,
+      data: transactionData,
       skipDuplicates: true,
     });
 
