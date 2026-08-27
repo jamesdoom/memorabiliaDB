@@ -21,6 +21,8 @@ export const inventoryLocationTypeSchema = z.enum([
   "OTHER",
 ]);
 
+export const gradingCompanySchema = z.enum(["PSA", "SGC", "BECKETT", "OTHER"]);
+
 export const cardSchema = z.object({
   playerName: z.string().min(1, "Player name is required"),
   sport: z.string().min(1),
@@ -47,6 +49,16 @@ export const cardSchema = z.object({
   locationDetail: z.string().max(120).optional().nullable(),
   consignmentPartner: z.string().max(120).optional().nullable(),
   gradingSubmissionBatch: z.string().max(120).optional().nullable(),
+  gradingSubmissionBatchId: z.string().uuid().optional().nullable(),
+  gradingCompany: gradingCompanySchema.optional().nullable(),
+  gradingServiceLevel: z.string().max(120).optional().nullable(),
+  gradingSubmittedAt: z.coerce.date().optional().nullable(),
+  gradingReturnedAt: z.coerce.date().optional().nullable(),
+  gradingFeeCents: z.number().int().min(0).optional().nullable(),
+  gradingCertNumber: z.string().max(120).optional().nullable(),
+  finalGrade: z.string().max(40).optional().nullable(),
+  expectedGradedValueCents: z.number().int().min(0).optional().nullable(),
+  gradingConfidence: z.number().int().min(0).max(100).optional().nullable(),
   listingMarketplace: z.string().max(100).optional().nullable(),
   listingUrl: z.string().url().optional().nullable(),
   askingPriceCents: z.number().int().min(0).optional().nullable(),

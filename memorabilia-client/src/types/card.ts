@@ -42,6 +42,16 @@ export type Card = {
   locationDetail: string | null;
   consignmentPartner: string | null;
   gradingSubmissionBatch: string | null;
+  gradingSubmissionBatchId: string | null;
+  gradingCompany: "PSA" | "SGC" | "BECKETT" | "OTHER" | null;
+  gradingServiceLevel: string | null;
+  gradingSubmittedAt: string | null;
+  gradingReturnedAt: string | null;
+  gradingFeeCents: number | null;
+  gradingCertNumber: string | null;
+  finalGrade: string | null;
+  expectedGradedValueCents: number | null;
+  gradingConfidence: number | null;
   listingMarketplace: string | null;
   listingUrl: string | null;
   askingPriceCents: number | null;
@@ -59,6 +69,31 @@ export type Card = {
 
 export type CardStatus = Card["status"];
 export type InventoryLocationType = NonNullable<Card["locationType"]>;
+export type GradingCompany = NonNullable<Card["gradingCompany"]>;
+
+export type GradingSubmissionBatchCard = Pick<
+  Card,
+  | "id"
+  | "playerName"
+  | "title"
+  | "year"
+  | "status"
+  | "finalGrade"
+  | "gradingCertNumber"
+>;
+
+export type GradingSubmissionBatch = {
+  id: string;
+  name: string;
+  company: GradingCompany;
+  serviceLevel: string | null;
+  submittedAt: string | null;
+  returnedAt: string | null;
+  notes: string | null;
+  cards: GradingSubmissionBatchCard[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type Pagination = {
   totalCount: number;
@@ -104,6 +139,21 @@ export type RecommendationCard = Pick<
 export type RecommendationsResponse = {
   grade: RecommendationCard[];
   sellRaw: RecommendationCard[];
+};
+
+export type GradingRoi = {
+  rawValueCents: number;
+  expectedGradedValueCents: number;
+  gradingFeeCents: number;
+  confidence: number;
+  grossUpsideCents: number;
+  estimatedProfitCents: number;
+  recommendation: "STRONG" | "CONSIDER" | "SKIP";
+};
+
+export type GradingRecommendationResponse = {
+  card: Card;
+  roi: GradingRoi;
 };
 
 export type SellerTotals = {

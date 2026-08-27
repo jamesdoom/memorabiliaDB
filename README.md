@@ -32,6 +32,9 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 - Inventory age and listing age tracking from card creation/import and listing dates.
 - Stale listing queue with recommended price reductions after 45, 90, and 180 days.
 - Structured location workflows for boxes, shelves, binders, consignment, and grading submission batches.
+- Grading submission batches for PSA, SGC, Beckett, and other services.
+- Grading ROI estimates using raw value, expected graded value, grading fees, and confidence.
+- Returned grading workflow that records final grade/cert data and converts cards to graded inventory.
 - Create, edit, and safely delete individual inventory records from the client.
 - Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
 - Listing workflow fields for marketplace, listing URL, asking price, listed date, and sold date.
@@ -162,6 +165,19 @@ The dashboard also tracks inventory age from the card creation/import date and l
 - 180+ days: reduce by 20%
 
 Use the `Stale listings` filter to turn those recommendations into a focused repricing queue.
+
+## Grading Workflow
+
+The grading workspace helps decide what to submit, track cards while they are away, and convert returned cards back into inventory:
+
+1. Create a PSA, SGC, Beckett, or other grading submission batch with service level, submitted date, and notes.
+2. Open a card detail modal and assign the card to an active submission batch from the batch picker.
+3. Add raw value, expected graded value, grading fee, and confidence to estimate ROI.
+4. Review the `Grading` page to compare candidates by raw value, expected graded value, fees, and projected profit.
+5. When a batch returns, record return date, final grade, cert number, and updated graded value for each card.
+6. Save the return to mark cards as `GRADED`, keep their batch history, and update their inventory location/status.
+
+The ROI estimate is intentionally conservative: it subtracts grading fees from the confidence-weighted upside between raw value and expected graded value. That gives the seller a quick signal without pretending the app has live market comps yet.
 
 ## Project Structure
 
@@ -342,6 +358,10 @@ Current automated tests cover:
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
 - `GET /cards` stale-listing filtering and price-reduction recommendations
+- `GET /grading/batches` submission batches with linked card details
+- `POST /grading/batches` submission batch creation
+- `GET /grading/recommendations` grading ROI estimates
+- `PATCH /grading/batches/:id/return` returned-card conversion to graded inventory
 - `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
 - `GET /seller/summary` marketplace and linked-card profit breakdowns
 - `GET /seller/transactions` filtering, pagination, and linked card details
@@ -361,9 +381,8 @@ Current automated tests cover:
 ## Roadmap
 
 - Add frontend component tests for filtering, status changes, and upload feedback.
-- Add inventory age and price-reduction recommendations.
-- Add grading submission batches for PSA, SGC, and Beckett.
-- Add marketplace fee presets for faster seller transaction entry.
+- Add one-click card assignment from ROI recommendations into an open grading batch.
+- Add marketplace fee presets directly into the seller transaction form.
 - Improve the recommendations UI with richer card previews and sorting controls.
 - Deploy the client and API after the next feature set is complete.
 - Add authentication if the app becomes multi-user.

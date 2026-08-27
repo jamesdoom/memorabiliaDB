@@ -2,6 +2,8 @@ import type {
   Card,
   CardStatus,
   CardsResponse,
+  GradingRecommendationResponse,
+  GradingSubmissionBatch,
   RecommendationsResponse,
   SellerSummary,
   SellerTransaction,
@@ -42,6 +44,63 @@ export async function fetchSummary(): Promise<Summary> {
 
 export async function fetchRecommendations(): Promise<RecommendationsResponse> {
   return requestJson<RecommendationsResponse>("/cards/recommendations");
+}
+
+export async function fetchGradingBatches(): Promise<GradingSubmissionBatch[]> {
+  return requestJson<GradingSubmissionBatch[]>("/grading/batches");
+}
+
+export async function fetchGradingRecommendations(): Promise<
+  GradingRecommendationResponse[]
+> {
+  return requestJson<GradingRecommendationResponse[]>("/grading/recommendations");
+}
+
+export type GradingBatchInput = Pick<
+  GradingSubmissionBatch,
+  "name" | "company"
+> &
+  Partial<
+    Pick<
+      GradingSubmissionBatch,
+      "serviceLevel" | "submittedAt" | "returnedAt" | "notes"
+    >
+  >;
+
+export async function createGradingBatch(
+  input: GradingBatchInput,
+): Promise<GradingSubmissionBatch> {
+  return requestJson<GradingSubmissionBatch>("/grading/batches", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function returnGradingBatch(
+  id: string,
+  input: {
+    returnedAt: string;
+    cards: Array<{
+      id: string;
+      finalGrade?: string | null;
+      gradingCertNumber?: string | null;
+      expectedGradedValueCents?: number | null;
+    }>;
+  },
+): Promise<{ batch: GradingSubmissionBatch; cards: Card[] }> {
+  return requestJson<{ batch: GradingSubmissionBatch; cards: Card[] }>(
+    `/grading/batches/${id}/return`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export async function fetchSellerSummary(): Promise<SellerSummary> {
@@ -123,6 +182,16 @@ export type CreateCardInput = Pick<
       | "locationDetail"
       | "consignmentPartner"
       | "gradingSubmissionBatch"
+      | "gradingSubmissionBatchId"
+      | "gradingCompany"
+      | "gradingServiceLevel"
+      | "gradingSubmittedAt"
+      | "gradingReturnedAt"
+      | "gradingFeeCents"
+      | "gradingCertNumber"
+      | "finalGrade"
+      | "expectedGradedValueCents"
+      | "gradingConfidence"
       | "listingMarketplace"
       | "listingUrl"
       | "askingPriceCents"
@@ -177,6 +246,16 @@ export type CardDetailsUpdate = Partial<
     | "locationDetail"
     | "consignmentPartner"
     | "gradingSubmissionBatch"
+    | "gradingSubmissionBatchId"
+    | "gradingCompany"
+    | "gradingServiceLevel"
+    | "gradingSubmittedAt"
+    | "gradingReturnedAt"
+    | "gradingFeeCents"
+    | "gradingCertNumber"
+    | "finalGrade"
+    | "expectedGradedValueCents"
+    | "gradingConfidence"
     | "status"
     | "listingMarketplace"
     | "listingUrl"

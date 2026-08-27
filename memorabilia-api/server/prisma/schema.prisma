@@ -33,6 +33,13 @@ enum InventoryLocationType {
   OTHER
 }
 
+enum GradingCompany {
+  PSA
+  SGC
+  BECKETT
+  OTHER
+}
+
 enum SellerTransactionType {
   PURCHASE
   SALE
@@ -71,6 +78,17 @@ model Card {
   locationDetail        String?
   consignmentPartner    String?
   gradingSubmissionBatch String?
+  gradingSubmissionBatchId String?
+  gradingBatch          GradingSubmissionBatch? @relation(fields: [gradingSubmissionBatchId], references: [id], onDelete: SetNull)
+  gradingCompany        GradingCompany?
+  gradingServiceLevel   String?
+  gradingSubmittedAt    DateTime?
+  gradingReturnedAt     DateTime?
+  gradingFeeCents       Int?
+  gradingCertNumber     String?
+  finalGrade            String?
+  expectedGradedValueCents Int?
+  gradingConfidence     Int?
   listingMarketplace    String?
   listingUrl            String?
   askingPriceCents      Int?
@@ -84,7 +102,25 @@ model Card {
   @@unique([playerName, year, manufacturer, title, cardNumber])
   @@index([playerName])
   @@index([lastValuedAt])
+  @@index([gradingSubmissionBatchId])
   
+}
+
+model GradingSubmissionBatch {
+  id            String         @id @default(uuid())
+  name          String
+  company       GradingCompany
+  serviceLevel  String?
+  submittedAt   DateTime?
+  returnedAt    DateTime?
+  notes         String?
+  cards         Card[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([company])
+  @@index([submittedAt])
+  @@index([returnedAt])
 }
 
 model SellerTransaction {

@@ -12,6 +12,7 @@ import SellerSummaryCard from "./components/SellerSummaryCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
 import Transactions from "./pages/Transactions";
+import Grading from "./pages/Grading";
 import { useDebounce } from "./hooks/useDebounce";
 import type {
   Card,
@@ -212,6 +213,7 @@ function App() {
         </Link>
         <Link to="/recommendations">Recommendations</Link>
         <Link to="/transactions">Transactions</Link>
+        <Link to="/grading">Grading</Link>
       </nav>
 
       <Routes>
@@ -439,6 +441,7 @@ function App() {
 
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/transactions" element={<Transactions />} />
+        <Route path="/grading" element={<Grading />} />
       </Routes>
     </div>
   );

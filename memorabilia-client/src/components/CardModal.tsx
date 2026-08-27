@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   deleteCard,
   createSellerTransaction,
+  fetchGradingBatches,
   updateCard,
   updateCardDetails,
   updateCardStatus,
   updateCardValuation,
   uploadImage,
 } from "../api";
-import type { Card, InventoryLocationType } from "../types/card";
+import type {
+  Card,
+  GradingSubmissionBatch,
+  InventoryLocationType,
+} from "../types/card";
 import SellerTransactionForm from "./SellerTransactionForm";
 
 type Props = {
@@ -41,6 +46,9 @@ export default function CardModal({
   const [editingValuation, setEditingValuation] = useState(false);
   const [savingValuation, setSavingValuation] = useState(false);
   const [addingTransaction, setAddingTransaction] = useState(false);
+  const [gradingBatches, setGradingBatches] = useState<
+    GradingSubmissionBatch[]
+  >([]);
   const [detailsForm, setDetailsForm] = useState({
     playerName: card.playerName,
     sport: card.sport,
@@ -58,6 +66,20 @@ export default function CardModal({
     locationDetail: card.locationDetail ?? "",
     consignmentPartner: card.consignmentPartner ?? "",
     gradingSubmissionBatch: card.gradingSubmissionBatch ?? "",
+    gradingSubmissionBatchId: card.gradingSubmissionBatchId ?? "",
+    gradingCompany: card.gradingCompany ?? "",
+    gradingServiceLevel: card.gradingServiceLevel ?? "",
+    gradingSubmittedAt: card.gradingSubmittedAt?.slice(0, 10) ?? "",
+    gradingReturnedAt: card.gradingReturnedAt?.slice(0, 10) ?? "",
+    gradingFee: card.gradingFeeCents
+      ? (card.gradingFeeCents / 100).toFixed(2)
+      : "",
+    gradingCertNumber: card.gradingCertNumber ?? "",
+    finalGrade: card.finalGrade ?? "",
+    expectedGradedValue: card.expectedGradedValueCents
+      ? (card.expectedGradedValueCents / 100).toFixed(2)
+      : "",
+    gradingConfidence: card.gradingConfidence?.toString() ?? "",
     listingMarketplace: card.listingMarketplace ?? "",
     listingUrl: card.listingUrl ?? "",
     askingPrice: card.askingPriceCents
@@ -79,6 +101,25 @@ export default function CardModal({
   const lastValuedAt = card.lastValuedAt
     ? new Date(card.lastValuedAt).toLocaleDateString()
     : null;
+
+  useEffect(() => {
+    let active = true;
+
+    if (!editingDetails) return;
+
+    fetchGradingBatches()
+      .then((batches) => {
+        if (active) setGradingBatches(batches);
+      })
+      .catch((error) => {
+        console.error("Failed to load grading batches:", error);
+        if (active) setActionError("Failed to load grading batches.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [editingDetails]);
 
   function resetValuationForm() {
     setValuationForm({
@@ -109,6 +150,20 @@ export default function CardModal({
       locationDetail: card.locationDetail ?? "",
       consignmentPartner: card.consignmentPartner ?? "",
       gradingSubmissionBatch: card.gradingSubmissionBatch ?? "",
+      gradingSubmissionBatchId: card.gradingSubmissionBatchId ?? "",
+      gradingCompany: card.gradingCompany ?? "",
+      gradingServiceLevel: card.gradingServiceLevel ?? "",
+      gradingSubmittedAt: card.gradingSubmittedAt?.slice(0, 10) ?? "",
+      gradingReturnedAt: card.gradingReturnedAt?.slice(0, 10) ?? "",
+      gradingFee: card.gradingFeeCents
+        ? (card.gradingFeeCents / 100).toFixed(2)
+        : "",
+      gradingCertNumber: card.gradingCertNumber ?? "",
+      finalGrade: card.finalGrade ?? "",
+      expectedGradedValue: card.expectedGradedValueCents
+        ? (card.expectedGradedValueCents / 100).toFixed(2)
+        : "",
+      gradingConfidence: card.gradingConfidence?.toString() ?? "",
       listingMarketplace: card.listingMarketplace ?? "",
       listingUrl: card.listingUrl ?? "",
       askingPrice: card.askingPriceCents
@@ -314,6 +369,27 @@ export default function CardModal({
                 <strong>Grading batch:</strong> {card.gradingSubmissionBatch}
               </p>
             )}
+            {card.gradingCompany && (
+              <p>
+                <strong>Grading company:</strong> {card.gradingCompany}
+              </p>
+            )}
+            {card.finalGrade && (
+              <p>
+                <strong>Final grade:</strong> {card.finalGrade}
+              </p>
+            )}
+            {card.gradingCertNumber && (
+              <p>
+                <strong>Cert number:</strong> {card.gradingCertNumber}
+              </p>
+            )}
+            {card.expectedGradedValueCents !== null && (
+              <p>
+                <strong>Expected graded value:</strong> $
+                {(card.expectedGradedValueCents / 100).toFixed(2)}
+              </p>
+            )}
             {card.inventoryAgeDays !== null && (
               <p>
                 <strong>Inventory age:</strong> {card.inventoryAgeDays} days
@@ -407,6 +483,29 @@ export default function CardModal({
                       detailsForm.consignmentPartner.trim() || null,
                     gradingSubmissionBatch:
                       detailsForm.gradingSubmissionBatch.trim() || null,
+                    gradingSubmissionBatchId:
+                      detailsForm.gradingSubmissionBatchId.trim() || null,
+                    gradingCompany:
+                      (detailsForm.gradingCompany as Card["gradingCompany"]) ||
+                      null,
+                    gradingServiceLevel:
+                      detailsForm.gradingServiceLevel.trim() || null,
+                    gradingSubmittedAt: optionalDate(
+                      detailsForm.gradingSubmittedAt,
+                    ),
+                    gradingReturnedAt: optionalDate(
+                      detailsForm.gradingReturnedAt,
+                    ),
+                    gradingFeeCents: moneyToCents(detailsForm.gradingFee),
+                    gradingCertNumber:
+                      detailsForm.gradingCertNumber.trim() || null,
+                    finalGrade: detailsForm.finalGrade.trim() || null,
+                    expectedGradedValueCents: moneyToCents(
+                      detailsForm.expectedGradedValue,
+                    ),
+                    gradingConfidence: parseOptionalNumber(
+                      detailsForm.gradingConfidence,
+                    ),
                     listingMarketplace:
                       detailsForm.listingMarketplace.trim() || null,
                     listingUrl: detailsForm.listingUrl.trim() || null,
@@ -650,7 +749,7 @@ export default function CardModal({
                 </label>
 
                 <label>
-                  Grading batch
+                  Batch note
                   <input
                     type="text"
                     value={detailsForm.gradingSubmissionBatch}
@@ -658,6 +757,185 @@ export default function CardModal({
                       setDetailsForm((current) => ({
                         ...current,
                         gradingSubmissionBatch: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Submission batch
+                  <select
+                    value={detailsForm.gradingSubmissionBatchId}
+                    onChange={(e) =>
+                      setDetailsForm((current) => {
+                        const selectedBatch = gradingBatches.find(
+                          (batch) => batch.id === e.target.value,
+                        );
+
+                        return {
+                          ...current,
+                          gradingSubmissionBatchId: e.target.value,
+                          gradingSubmissionBatch: selectedBatch
+                            ? selectedBatch.name
+                            : current.gradingSubmissionBatch,
+                          gradingCompany:
+                            selectedBatch?.company ?? current.gradingCompany,
+                          gradingServiceLevel:
+                            selectedBatch?.serviceLevel ??
+                            current.gradingServiceLevel,
+                          gradingSubmittedAt:
+                            selectedBatch?.submittedAt?.slice(0, 10) ??
+                            current.gradingSubmittedAt,
+                          locationType: e.target.value
+                            ? "GRADING_SUBMISSION"
+                            : current.locationType,
+                        };
+                      })
+                    }
+                  >
+                    <option value="">Unset</option>
+                    {gradingBatches.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name} - {batch.company}
+                        {batch.serviceLevel ? ` ${batch.serviceLevel}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Grading company
+                  <select
+                    value={detailsForm.gradingCompany}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingCompany: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Unset</option>
+                    <option value="PSA">PSA</option>
+                    <option value="SGC">SGC</option>
+                    <option value="BECKETT">Beckett</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+
+                <label>
+                  Service level
+                  <input
+                    type="text"
+                    value={detailsForm.gradingServiceLevel}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingServiceLevel: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Grading fee
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={detailsForm.gradingFee}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingFee: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Expected graded value
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={detailsForm.expectedGradedValue}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        expectedGradedValue: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Grading confidence
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={detailsForm.gradingConfidence}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingConfidence: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Submitted date
+                  <input
+                    type="date"
+                    value={detailsForm.gradingSubmittedAt}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingSubmittedAt: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Return date
+                  <input
+                    type="date"
+                    value={detailsForm.gradingReturnedAt}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingReturnedAt: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Final grade
+                  <input
+                    type="text"
+                    value={detailsForm.finalGrade}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        finalGrade: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Cert number
+                  <input
+                    type="text"
+                    value={detailsForm.gradingCertNumber}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingCertNumber: e.target.value,
                       }))
                     }
                   />
