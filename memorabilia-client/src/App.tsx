@@ -11,6 +11,7 @@ import SellerCsvImport from "./components/SellerCsvImport";
 import SellerSummaryCard from "./components/SellerSummaryCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
+import Transactions from "./pages/Transactions";
 import { useDebounce } from "./hooks/useDebounce";
 import type {
   Card,
@@ -179,6 +180,7 @@ function App() {
           Home
         </Link>
         <Link to="/recommendations">Recommendations</Link>
+        <Link to="/transactions">Transactions</Link>
       </nav>
 
       <Routes>
@@ -396,6 +398,7 @@ function App() {
         />
 
         <Route path="/recommendations" element={<Recommendations />} />
+        <Route path="/transactions" element={<Transactions />} />
       </Routes>
     </div>
   );

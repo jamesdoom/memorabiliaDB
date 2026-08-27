@@ -29,6 +29,11 @@ interface RawCardRow {
   serialNumber?: string;
   quantity?: string;
   location?: string;
+  listingMarketplace?: string;
+  listingUrl?: string;
+  askingPriceCents?: string;
+  listedAt?: string;
+  soldAt?: string;
 }
 
 function createSlug(row: {
@@ -180,6 +185,11 @@ async function main() {
         serialNumber: row.serialNumber || null,
         quantity: row.quantity ? Number(row.quantity) : 1,
         location: row.location || null,
+        listingMarketplace: row.listingMarketplace || null,
+        listingUrl: row.listingUrl || null,
+        askingPriceCents: parseOptionalInt(row.askingPriceCents),
+        listedAt: parseOptionalDate(row.listedAt),
+        soldAt: parseOptionalDate(row.soldAt),
 
         importOrder: index++,
       });
@@ -218,6 +228,11 @@ async function main() {
           serialNumber: card.serialNumber,
           quantity: card.quantity,
           location: card.location,
+          listingMarketplace: card.listingMarketplace,
+          listingUrl: card.listingUrl,
+          askingPriceCents: card.askingPriceCents,
+          listedAt: card.listedAt,
+          soldAt: card.soldAt,
           importOrder: card.importOrder,
           gradingProfitPotential: card.gradingProfitPotential,
           gradingRecommendation: card.gradingRecommendation,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   deleteCard,
+  createSellerTransaction,
   updateCard,
   updateCardDetails,
   updateCardStatus,
@@ -8,6 +9,7 @@ import {
   uploadImage,
 } from "../api";
 import type { Card } from "../types/card";
+import SellerTransactionForm from "./SellerTransactionForm";
 
 type Props = {
   card: Card;
@@ -38,6 +40,7 @@ export default function CardModal({
   const [savingDetails, setSavingDetails] = useState(false);
   const [editingValuation, setEditingValuation] = useState(false);
   const [savingValuation, setSavingValuation] = useState(false);
+  const [addingTransaction, setAddingTransaction] = useState(false);
   const [detailsForm, setDetailsForm] = useState({
     playerName: card.playerName,
     sport: card.sport,
@@ -50,6 +53,13 @@ export default function CardModal({
     serialNumber: card.serialNumber ?? "",
     quantity: card.quantity.toString(),
     location: card.location ?? "",
+    listingMarketplace: card.listingMarketplace ?? "",
+    listingUrl: card.listingUrl ?? "",
+    askingPrice: card.askingPriceCents
+      ? (card.askingPriceCents / 100).toFixed(2)
+      : "",
+    listedAt: card.listedAt?.slice(0, 10) ?? "",
+    soldAt: card.soldAt?.slice(0, 10) ?? "",
   });
   const [valuationForm, setValuationForm] = useState({
     goodConditionValue: card.goodConditionValue?.toString() ?? "",
@@ -89,6 +99,13 @@ export default function CardModal({
       serialNumber: card.serialNumber ?? "",
       quantity: card.quantity.toString(),
       location: card.location ?? "",
+      listingMarketplace: card.listingMarketplace ?? "",
+      listingUrl: card.listingUrl ?? "",
+      askingPrice: card.askingPriceCents
+        ? (card.askingPriceCents / 100).toFixed(2)
+        : "",
+      listedAt: card.listedAt?.slice(0, 10) ?? "",
+      soldAt: card.soldAt?.slice(0, 10) ?? "",
     });
   }
 
@@ -98,6 +115,16 @@ export default function CardModal({
 
   function parseRequiredNumber(value: string) {
     return Number(value);
+  }
+
+  function moneyToCents(value: string) {
+    const normalized = value.replace(/[$,]/g, "").trim();
+    if (!normalized) return null;
+    return Math.round(Number(normalized) * 100);
+  }
+
+  function optionalDate(value: string) {
+    return value ? new Date(value).toISOString() : null;
   }
 
   return (
@@ -256,6 +283,37 @@ export default function CardModal({
                 <strong>Location:</strong> {card.location}
               </p>
             )}
+            {card.listingMarketplace && (
+              <p>
+                <strong>Listed on:</strong> {card.listingMarketplace}
+              </p>
+            )}
+            {card.askingPriceCents !== null && (
+              <p>
+                <strong>Asking price:</strong> $
+                {(card.askingPriceCents / 100).toFixed(2)}
+              </p>
+            )}
+            {card.listingUrl && (
+              <p>
+                <strong>Listing URL:</strong>{" "}
+                <a href={card.listingUrl} target="_blank" rel="noreferrer">
+                  Open listing
+                </a>
+              </p>
+            )}
+            {card.listedAt && (
+              <p>
+                <strong>Listed date:</strong>{" "}
+                {new Date(card.listedAt).toLocaleDateString()}
+              </p>
+            )}
+            {card.soldAt && (
+              <p>
+                <strong>Sold date:</strong>{" "}
+                {new Date(card.soldAt).toLocaleDateString()}
+              </p>
+            )}
           </div>
 
           <div className="detailsHeader">
@@ -295,6 +353,12 @@ export default function CardModal({
                     serialNumber: detailsForm.serialNumber.trim() || null,
                     quantity: parseRequiredNumber(detailsForm.quantity),
                     location: detailsForm.location.trim() || null,
+                    listingMarketplace:
+                      detailsForm.listingMarketplace.trim() || null,
+                    listingUrl: detailsForm.listingUrl.trim() || null,
+                    askingPriceCents: moneyToCents(detailsForm.askingPrice),
+                    listedAt: optionalDate(detailsForm.listedAt),
+                    soldAt: optionalDate(detailsForm.soldAt),
                   });
 
                   setSelectedCard(updatedCard);
@@ -460,7 +524,79 @@ export default function CardModal({
                     }
                   />
                 </label>
+
+                <label>
+                  Listing marketplace
+                  <input
+                    type="text"
+                    value={detailsForm.listingMarketplace}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        listingMarketplace: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Asking price
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={detailsForm.askingPrice}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        askingPrice: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Listed date
+                  <input
+                    type="date"
+                    value={detailsForm.listedAt}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        listedAt: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Sold date
+                  <input
+                    type="date"
+                    value={detailsForm.soldAt}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        soldAt: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
               </div>
+
+              <label>
+                Listing URL
+                <input
+                  type="url"
+                  value={detailsForm.listingUrl}
+                  onChange={(e) =>
+                    setDetailsForm((current) => ({
+                      ...current,
+                      listingUrl: e.target.value,
+                    }))
+                  }
+                />
+              </label>
 
               <label className="detailsCheckbox">
                 <input
@@ -493,6 +629,34 @@ export default function CardModal({
                 </button>
               </div>
             </form>
+          )}
+
+          <div className="detailsHeader">
+            <h3>Seller Ledger</h3>
+            <button
+              type="button"
+              className="secondaryButton"
+              disabled={busy}
+              onClick={() => {
+                setActionError(null);
+                setAddingTransaction((current) => !current);
+              }}
+            >
+              {addingTransaction ? "Cancel" : "Add Purchase/Sale"}
+            </button>
+          </div>
+
+          {addingTransaction && (
+            <SellerTransactionForm
+              compact
+              defaultCardId={card.id}
+              onCancel={() => setAddingTransaction(false)}
+              onSubmit={async (input) => {
+                await createSellerTransaction(input);
+                setAddingTransaction(false);
+                await loadCards();
+              }}
+            />
           )}
 
           <div className="modalValues">

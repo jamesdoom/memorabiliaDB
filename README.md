@@ -27,6 +27,10 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 - Status tracking for `NEW`, `LISTED`, and `GRADED` cards.
 - Create, edit, and safely delete individual inventory records from the client.
 - Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
+- Listing workflow fields for marketplace, listing URL, asking price, listed date, and sold date.
+- Transactions page for reviewing, filtering, editing, and deleting seller ledger entries.
+- Manual purchase and sale entry from the Transactions page.
+- Card-linked purchase and sale entry from the card detail modal.
 - Manual valuation workflow for raw value, perfect-condition value, source, source URL, confidence, notes, and last-valued timestamp.
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
 - CSV import script for bulk-loading and syncing card data, including optional valuation metadata.
@@ -62,7 +66,7 @@ flowchart LR
   LedgerImport --> Prisma
 ```
 
-The client talks to the API through a centralized request layer in `memorabilia-client/src/api.ts`. The API exposes card, summary, recommendation, status, valuation, and upload routes, with Prisma handling database access. Image uploads are stored in Cloudinary, while the database stores the resulting image URLs.
+The client talks to the API through a centralized request layer in `memorabilia-client/src/api.ts`. The API exposes card, summary, recommendation, seller transaction, status, valuation, and upload routes, with Prisma handling database access. Image uploads are stored in Cloudinary, while the database stores the resulting image URLs.
 
 Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
 
@@ -85,8 +89,10 @@ The seller dashboard starts with a transaction ledger for purchases and sales:
 1. Keep `memorabilia-api/server/cards.csv` as the current inventory source.
 2. Create a separate CSV for purchases, sales, or marketplace exports.
 3. Import the ledger CSV from the dashboard with the `Purchases And Sales` importer, or use `npm run import:transactions -- ./your-transactions.csv`.
-4. Open the client dashboard to review revenue, purchase cost, fees, shipping, grading, supplies, and net profit.
-5. Use the monthly totals as the foundation for future profit and tax reporting.
+4. Use the `Transactions` page to review, filter, edit, or delete imported ledger rows.
+5. Add individual purchase or sale records manually from the `Transactions` page.
+6. Open a card detail modal to add a purchase or sale already linked to that card.
+7. Use the dashboard totals as the foundation for future profit and tax reporting.
 
 Supported transaction CSV columns:
 
@@ -101,6 +107,18 @@ Notes:
 - Use either `amount` in dollars, such as `24.99`, or `amountCents`, such as `2499`.
 - `cardId` or `cardSlug` can link a transaction to an inventory card, but either may be left blank for now. The in-app CSV importer supports both.
 - Cost columns use dollar amounts and are included in net profit.
+
+## Listing Workflow
+
+Each card can now track listing metadata directly from the card detail editor:
+
+- Marketplace
+- Listing URL
+- Asking price
+- Listed date
+- Sold date
+
+These fields are mutable app workflow data and do not require changing the current inventory CSV. They are separate from seller transaction records so a card can be listed before a sale exists, and a sale can still be recorded later with exact fees, shipping, grading, and supplies.
 
 ## Project Structure
 
@@ -281,7 +299,11 @@ Current automated tests cover:
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
 - `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
+- `GET /seller/transactions` filtering, pagination, and linked card details
 - `POST /seller/transactions` transaction creation and validation rejection
+- `PATCH /seller/transactions/:id` transaction updates without defaulting untouched fields
+- `DELETE /seller/transactions/:id` transaction deletion
+- `POST /seller/transactions/import` batch import and card slug linking
 - `GET /cards/recommendations`
 - `POST /cards` card creation and slug generation
 - `PATCH /cards/:id` card detail updates
@@ -294,9 +316,9 @@ Current automated tests cover:
 ## Roadmap
 
 - Add frontend component tests for filtering, status changes, and upload feedback.
-- Add client-side CSV upload screens for seller purchases and sales.
 - Add inventory age and price-reduction recommendations.
 - Add grading submission batches for PSA, SGC, and Beckett.
+- Add marketplace fee presets for faster seller transaction entry.
 - Improve the recommendations UI with richer card previews and sorting controls.
 - Deploy the client and API after the next feature set is complete.
 - Add authentication if the app becomes multi-user.

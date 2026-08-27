@@ -4,7 +4,10 @@ import type {
   CardsResponse,
   RecommendationsResponse,
   SellerSummary,
+  SellerTransaction,
   SellerTransactionImportInput,
+  SellerTransactionsResponse,
+  SellerTransactionType,
   Summary,
 } from "./types/card";
 
@@ -45,6 +48,14 @@ export async function fetchSellerSummary(): Promise<SellerSummary> {
   return requestJson<SellerSummary>("/seller/summary");
 }
 
+export async function fetchSellerTransactions(
+  queryString = "",
+): Promise<SellerTransactionsResponse> {
+  return requestJson<SellerTransactionsResponse>(
+    `/seller/transactions${queryString}`,
+  );
+}
+
 export async function importSellerTransactions(
   transactions: SellerTransactionImportInput[],
 ): Promise<{ imported: number }> {
@@ -54,6 +65,45 @@ export async function importSellerTransactions(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ transactions }),
+  });
+}
+
+export type SellerTransactionInput = SellerTransactionImportInput;
+
+export async function createSellerTransaction(
+  input: SellerTransactionInput,
+): Promise<SellerTransaction> {
+  return requestJson<SellerTransaction>("/seller/transactions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export type SellerTransactionUpdate = Partial<
+  Omit<SellerTransactionInput, "type"> & {
+    type: SellerTransactionType;
+  }
+>;
+
+export async function updateSellerTransaction(
+  id: string,
+  updates: SellerTransactionUpdate,
+): Promise<SellerTransaction> {
+  return requestJson<SellerTransaction>(`/seller/transactions/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updates),
+  });
+}
+
+export async function deleteSellerTransaction(id: string): Promise<void> {
+  await requestJson<{ message: string }>(`/seller/transactions/${id}`, {
+    method: "DELETE",
   });
 }
 
@@ -69,6 +119,11 @@ export type CreateCardInput = Pick<
       | "serialNumber"
       | "quantity"
       | "location"
+      | "listingMarketplace"
+      | "listingUrl"
+      | "askingPriceCents"
+      | "listedAt"
+      | "soldAt"
       | "goodConditionValue"
       | "perfectConditionValue"
       | "valueSource"
@@ -114,6 +169,11 @@ export type CardDetailsUpdate = Partial<
     | "serialNumber"
     | "quantity"
     | "location"
+    | "listingMarketplace"
+    | "listingUrl"
+    | "askingPriceCents"
+    | "listedAt"
+    | "soldAt"
   >
 >;
 

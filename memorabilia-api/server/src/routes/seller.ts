@@ -1,6 +1,8 @@
 import { Router } from "express";
+import { Prisma, SellerTransactionType } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import {
+  partialSellerTransactionSchema,
   sellerTransactionSchema,
   sellerTransactionsImportSchema,
 } from "../validation/sellerTransactionSchema";
@@ -139,18 +141,36 @@ async function resolveCardIdsBySlug(
 
 async function prepareTransactionData<T extends { cardSlug?: string | null }>(
   transactions: T[],
+  options: { defaultUnlinkedCard?: boolean } = {},
 ) {
   const cardIdsBySlug = await resolveCardIdsBySlug(transactions);
 
-  return transactions.map(({ cardSlug, ...transaction }) => ({
-    ...transaction,
-    cardId:
-      "cardId" in transaction && transaction.cardId
-        ? transaction.cardId
-        : cardSlug
-          ? cardIdsBySlug.get(cardSlug) ?? null
-          : null,
-  }));
+  return transactions.map(({ cardSlug, ...transaction }) => {
+    const data = { ...transaction };
+
+    if ("cardId" in transaction && transaction.cardId) {
+      return {
+        ...data,
+        cardId: transaction.cardId,
+      };
+    }
+
+    if (cardSlug) {
+      return {
+        ...data,
+        cardId: cardIdsBySlug.get(cardSlug) ?? null,
+      };
+    }
+
+    if (options.defaultUnlinkedCard) {
+      return {
+        ...data,
+        cardId: null,
+      };
+    }
+
+    return data;
+  });
 }
 
 router.get(
@@ -169,11 +189,77 @@ router.get(
   }),
 );
 
+router.get(
+  "/transactions",
+  asyncHandler(async (req, res) => {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const type =
+      req.query.type === "PURCHASE" || req.query.type === "SALE"
+        ? (req.query.type as SellerTransactionType)
+        : undefined;
+    const marketplace = req.query.marketplace
+      ? String(req.query.marketplace)
+      : undefined;
+    const cardId = req.query.cardId ? String(req.query.cardId) : undefined;
+
+    const where: Prisma.SellerTransactionWhereInput = {
+      ...(type ? { type } : {}),
+      ...(marketplace
+        ? {
+            marketplace: {
+              contains: marketplace,
+              mode: "insensitive" as const,
+            },
+          }
+        : {}),
+      ...(cardId ? { cardId } : {}),
+    };
+
+    const [totalCount, transactions] = await Promise.all([
+      prisma.sellerTransaction.count({ where }),
+      prisma.sellerTransaction.findMany({
+        where,
+        include: {
+          card: {
+            select: {
+              id: true,
+              slug: true,
+              playerName: true,
+              title: true,
+              year: true,
+              manufacturer: true,
+              cardNumber: true,
+            },
+          },
+        },
+        orderBy: {
+          occurredAt: "desc",
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    res.json({
+      data: transactions,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        pageSize: limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
+  }),
+);
+
 router.post(
   "/transactions",
   asyncHandler(async (req, res) => {
     const validatedData = sellerTransactionSchema.parse(req.body);
-    const [transactionData] = await prepareTransactionData([validatedData]);
+    const [transactionData] = await prepareTransactionData([validatedData], {
+      defaultUnlinkedCard: true,
+    });
 
     const transaction = await prisma.sellerTransaction.create({
       data: transactionData,
@@ -183,11 +269,42 @@ router.post(
   }),
 );
 
+router.patch(
+  "/transactions/:id",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    const validatedData = partialSellerTransactionSchema.parse(req.body);
+    const [transactionData] = await prepareTransactionData([validatedData]);
+
+    const transaction = await prisma.sellerTransaction.update({
+      where: { id },
+      data: transactionData,
+    });
+
+    res.json(transaction);
+  }),
+);
+
+router.delete(
+  "/transactions/:id",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+
+    await prisma.sellerTransaction.delete({
+      where: { id },
+    });
+
+    res.json({ message: "Transaction deleted successfully" });
+  }),
+);
+
 router.post(
   "/transactions/import",
   asyncHandler(async (req, res) => {
     const { transactions } = sellerTransactionsImportSchema.parse(req.body);
-    const transactionData = await prepareTransactionData(transactions);
+    const transactionData = await prepareTransactionData(transactions, {
+      defaultUnlinkedCard: true,
+    });
 
     const result = await prisma.sellerTransaction.createMany({
       data: transactionData,

@@ -7,9 +7,12 @@ const prismaMock = vi.hoisted(() => ({
     findMany: vi.fn(),
   },
   sellerTransaction: {
+    count: vi.fn(),
     create: vi.fn(),
     createMany: vi.fn(),
+    delete: vi.fn(),
     findMany: vi.fn(),
+    update: vi.fn(),
   },
 }));
 
@@ -18,9 +21,12 @@ const cardMock = prismaMock.card as {
 };
 
 const transactionMock = prismaMock.sellerTransaction as {
+  count: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   createMany: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
 };
 
 let app: Express;
@@ -126,6 +132,91 @@ describe("seller routes", () => {
     });
   });
 
+  describe("GET /seller/transactions", () => {
+    it("returns filtered seller transactions with linked card details", async () => {
+      const transactions = [
+        {
+          id: "transaction-1",
+          type: "SALE",
+          occurredAt: new Date("2026-08-20T12:00:00.000Z"),
+          amountCents: 10000,
+          card: {
+            id: "card-1",
+            playerName: "Ken Griffey Jr.",
+            title: "Rookie Card",
+          },
+        },
+      ];
+
+      transactionMock.count.mockResolvedValue(1);
+      transactionMock.findMany.mockResolvedValue(transactions);
+
+      const response = await request(app)
+        .get("/seller/transactions")
+        .query({
+          page: "2",
+          limit: "10",
+          type: "SALE",
+          marketplace: "eBay",
+          cardId: "card-1",
+        })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        data: [
+          {
+            ...transactions[0],
+            occurredAt: "2026-08-20T12:00:00.000Z",
+          },
+        ],
+        pagination: {
+          totalCount: 1,
+          currentPage: 2,
+          pageSize: 10,
+          totalPages: 1,
+        },
+      });
+      expect(transactionMock.count).toHaveBeenCalledWith({
+        where: {
+          type: "SALE",
+          marketplace: {
+            contains: "eBay",
+            mode: "insensitive",
+          },
+          cardId: "card-1",
+        },
+      });
+      expect(transactionMock.findMany).toHaveBeenCalledWith({
+        where: {
+          type: "SALE",
+          marketplace: {
+            contains: "eBay",
+            mode: "insensitive",
+          },
+          cardId: "card-1",
+        },
+        include: {
+          card: {
+            select: {
+              id: true,
+              slug: true,
+              playerName: true,
+              title: true,
+              year: true,
+              manufacturer: true,
+              cardNumber: true,
+            },
+          },
+        },
+        orderBy: {
+          occurredAt: "desc",
+        },
+        skip: 10,
+        take: 10,
+      });
+    });
+  });
+
   describe("POST /seller/transactions", () => {
     it("creates a seller transaction", async () => {
       const transaction = {
@@ -174,6 +265,51 @@ describe("seller routes", () => {
         .expect(400);
 
       expect(transactionMock.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("PATCH /seller/transactions/:id", () => {
+    it("updates a seller transaction", async () => {
+      const transaction = {
+        id: "transaction-1",
+        amountCents: 12000,
+      };
+
+      transactionMock.update.mockResolvedValue(transaction);
+
+      const response = await request(app)
+        .patch("/seller/transactions/transaction-1")
+        .send({
+          amountCents: 12000,
+          marketplaceFees: 1500,
+        })
+        .expect(200);
+
+      expect(response.body).toEqual(transaction);
+      expect(transactionMock.update).toHaveBeenCalledWith({
+        where: { id: "transaction-1" },
+        data: {
+          amountCents: 12000,
+          marketplaceFees: 1500,
+        },
+      });
+    });
+  });
+
+  describe("DELETE /seller/transactions/:id", () => {
+    it("deletes a seller transaction", async () => {
+      transactionMock.delete.mockResolvedValue({ id: "transaction-1" });
+
+      const response = await request(app)
+        .delete("/seller/transactions/transaction-1")
+        .expect(200);
+
+      expect(response.body).toEqual({
+        message: "Transaction deleted successfully",
+      });
+      expect(transactionMock.delete).toHaveBeenCalledWith({
+        where: { id: "transaction-1" },
+      });
     });
   });
 

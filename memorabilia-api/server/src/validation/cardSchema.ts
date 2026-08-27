@@ -23,6 +23,11 @@ export const cardSchema = z.object({
   serialNumber: z.string().optional().nullable(),
   quantity: z.number().int().min(1).optional(),
   location: z.string().optional().nullable(),
+  listingMarketplace: z.string().max(100).optional().nullable(),
+  listingUrl: z.string().url().optional().nullable(),
+  askingPriceCents: z.number().int().min(0).optional().nullable(),
+  listedAt: z.coerce.date().optional().nullable(),
+  soldAt: z.coerce.date().optional().nullable(),
 });
 
 export const partialCardSchema = cardSchema.partial();

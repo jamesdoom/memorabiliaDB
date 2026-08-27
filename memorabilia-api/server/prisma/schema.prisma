@@ -51,6 +51,11 @@ model Card {
   serialNumber          String?
   quantity              Int      @default(1)
   location              String?
+  listingMarketplace    String?
+  listingUrl            String?
+  askingPriceCents      Int?
+  listedAt              DateTime?
+  soldAt                DateTime?
   importOrder           Int?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

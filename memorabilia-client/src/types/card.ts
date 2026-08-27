@@ -2,6 +2,7 @@
 
 export type Card = {
   id: string;
+  slug: string;
   playerName: string;
   sport: string;
   title: string;
@@ -23,6 +24,11 @@ export type Card = {
   imageFrontUrl: string | null;
   imageBackUrl: string | null;
   location: string | null;
+  listingMarketplace: string | null;
+  listingUrl: string | null;
+  askingPriceCents: number | null;
+  listedAt: string | null;
+  soldAt: string | null;
 };
 
 export type CardStatus = Card["status"];
@@ -109,4 +115,31 @@ export type SellerTransactionImportInput = {
   suppliesCost: number;
   notes?: string | null;
   sourceFile?: string | null;
+};
+
+export type SellerTransactionCard = Pick<
+  Card,
+  | "id"
+  | "slug"
+  | "playerName"
+  | "title"
+  | "year"
+  | "manufacturer"
+  | "cardNumber"
+>;
+
+export type SellerTransaction = Omit<
+  SellerTransactionImportInput,
+  "cardSlug" | "occurredAt"
+> & {
+  id: string;
+  occurredAt: string;
+  card: SellerTransactionCard | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SellerTransactionsResponse = {
+  data: SellerTransaction[];
+  pagination: Pagination;
 };

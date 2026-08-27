@@ -835,6 +835,10 @@ MODAL
 
 .detailsForm input,
 .detailsForm textarea,
+.detailsForm select,
+.transactionForm input,
+.transactionForm textarea,
+.transactionForm select,
 .valuationForm input,
 .valuationForm textarea {
   width: 100%;
@@ -847,8 +851,23 @@ MODAL
 }
 
 .detailsForm textarea,
+.transactionForm textarea,
 .valuationForm textarea {
   resize: vertical;
+}
+
+.transactionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transactionForm.compact {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
 }
 
 .detailsCheckbox {
@@ -1078,6 +1097,134 @@ PAGINATION
   font-weight: 600;
 }
 
+/* =========================
+OPERATIONS
+========================= */
+
+.operationsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.operationsPanel {
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: white;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.transactionFilters > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.transactionFilters select,
+.transactionFilters input {
+  min-height: 38px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  background: white;
+}
+
+.transactionsTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.transactionsTable {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.transactionsTable th,
+.transactionsTable td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--yankees-border);
+  vertical-align: top;
+}
+
+.transactionsTable th {
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.transactionsTable small {
+  display: block;
+  margin-top: 3px;
+  color: #6b7280;
+}
+
+.transactionType {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.transactionType.sale {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.transactionType.purchase {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.tableActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tableActions button {
+  padding: 8px 10px;
+}
+
+.inlineTransactionEditor {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
 @media (max-width: 720px) {
   .valuationStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1115,5 +1262,11 @@ PAGINATION
   .sellerMetricGrid,
   .sellerPreview {
     grid-template-columns: 1fr;
+  }
+
+  .sectionHeader,
+  .transactionFilters > div {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
