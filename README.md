@@ -22,6 +22,8 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 - Seller dashboard snapshot with revenue, cost basis, marketplace fees, shipping, grading, supplies, net profit, and latest monthly profit.
 - Realized profit calculations that separate purchase spend from sold-card cost basis.
 - Profit breakdowns by month, marketplace, and linked card.
+- Monthly and year-to-date seller reports for tax-season review.
+- Accountant-friendly CSV export with revenue, cost of goods sold, fees, shipping, supplies, grading, and net profit.
 - Seller transaction types for purchases, sales, refunds, returns, and adjustments.
 - Lot tracking fields for multi-card purchases or sales.
 - In-app CSV importer for purchase and sale ledgers with row validation, preview, and seller summary refresh.
@@ -80,7 +82,7 @@ The client talks to the API through a centralized request layer in `memorabilia-
 
 Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
 
-Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases, sales, refunds, returns, and adjustments are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, and grading return-on-investment from auditable seller events.
+Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases, sales, refunds, returns, and adjustments are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, reporting exports, and grading return-on-investment from auditable seller events.
 
 ## Valuation Workflow
 
@@ -128,6 +130,18 @@ Profit reporting separates inventory purchasing from realized profit:
 - Refunds and returns reduce revenue and reverse any provided cost basis.
 - Adjustments add positive profit-impacting corrections.
 - Net profit is calculated after realized cost basis, marketplace fees, shipping, grading, and supplies.
+
+## Reporting Workflow
+
+The reports workspace turns the seller ledger into monthly, year-to-date, marketplace, and accountant export views:
+
+1. Open `Reports` from the app navigation.
+2. Choose a year for a year-to-date report, or select a month for a monthly profit report.
+3. Review revenue, cost of goods sold, marketplace fees, shipping, supplies, grading, and net profit.
+4. Use the marketplace breakdown to compare channel performance.
+5. Export the selected reporting period as CSV for accountant-friendly records.
+
+The CSV export includes transaction-level rows with revenue, refunds, adjustments, cost of goods sold, fees, shipping, supplies, grading, and net impact. This keeps the exported file auditable while the screen-level report stays focused on decisions.
 
 ## Listing Workflow
 
@@ -364,6 +378,8 @@ Current automated tests cover:
 - `PATCH /grading/batches/:id/return` returned-card conversion to graded inventory
 - `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
 - `GET /seller/summary` marketplace and linked-card profit breakdowns
+- `GET /seller/reports` monthly and year-to-date seller reports
+- `GET /seller/reports/export.csv` accountant-friendly CSV exports
 - `GET /seller/transactions` filtering, pagination, and linked card details
 - `POST /seller/transactions` transaction creation and validation rejection
 - `PATCH /seller/transactions/:id` transaction updates without defaulting untouched fields
@@ -383,6 +399,7 @@ Current automated tests cover:
 - Add frontend component tests for filtering, status changes, and upload feedback.
 - Add one-click card assignment from ROI recommendations into an open grading batch.
 - Add marketplace fee presets directly into the seller transaction form.
+- Add downloadable PDF report snapshots for monthly closeout.
 - Improve the recommendations UI with richer card previews and sorting controls.
 - Deploy the client and API after the next feature set is complete.
 - Add authentication if the app becomes multi-user.

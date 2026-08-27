@@ -14,6 +14,52 @@ function toMonthKey(date: Date) {
   return date.toISOString().slice(0, 7);
 }
 
+function startOfYear(year: number) {
+  return new Date(Date.UTC(year, 0, 1));
+}
+
+function startOfNextYear(year: number) {
+  return new Date(Date.UTC(year + 1, 0, 1));
+}
+
+function startOfMonth(month: string) {
+  const [year, monthIndex] = month.split("-").map(Number);
+  return new Date(Date.UTC(year, monthIndex - 1, 1));
+}
+
+function startOfNextMonth(month: string) {
+  const [year, monthIndex] = month.split("-").map(Number);
+  return new Date(Date.UTC(year, monthIndex, 1));
+}
+
+function buildReportWhere(query: { year?: unknown; month?: unknown }) {
+  const year = Number(query.year) || new Date().getUTCFullYear();
+  const month = typeof query.month === "string" ? query.month : undefined;
+  const dateFilter = month
+    ? {
+        gte: startOfMonth(month),
+        lt: startOfNextMonth(month),
+      }
+    : {
+        gte: startOfYear(year),
+        lt: startOfNextYear(year),
+      };
+
+  return {
+    label: month ?? String(year),
+    year,
+    month,
+    where: {
+      occurredAt: dateFilter,
+    } satisfies Prisma.SellerTransactionWhereInput,
+  };
+}
+
+function escapeCsv(value: string | number | null | undefined) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 function buildSummary(
   transactions: Array<{
     type: "PURCHASE" | "SALE" | "REFUND" | "RETURN" | "ADJUSTMENT";
@@ -274,6 +320,146 @@ router.get(
       transactionCount: transactions.length,
       ...buildSummary(transactions),
     });
+  }),
+);
+
+router.get(
+  "/reports",
+  asyncHandler(async (req, res) => {
+    const report = buildReportWhere(req.query);
+    const transactions = await prisma.sellerTransaction.findMany({
+      where: report.where,
+      include: {
+        card: {
+          select: {
+            id: true,
+            playerName: true,
+            title: true,
+            year: true,
+            manufacturer: true,
+          },
+        },
+      },
+      orderBy: {
+        occurredAt: "desc",
+      },
+    });
+
+    res.json({
+      label: report.label,
+      year: report.year,
+      month: report.month,
+      transactionCount: transactions.length,
+      ...buildSummary(transactions),
+    });
+  }),
+);
+
+router.get(
+  "/reports/export.csv",
+  asyncHandler(async (req, res) => {
+    const report = buildReportWhere(req.query);
+    const transactions = await prisma.sellerTransaction.findMany({
+      where: report.where,
+      include: {
+        card: {
+          select: {
+            slug: true,
+            playerName: true,
+            title: true,
+            year: true,
+            manufacturer: true,
+            cardNumber: true,
+          },
+        },
+      },
+      orderBy: {
+        occurredAt: "asc",
+      },
+    });
+
+    const rows = [
+      [
+        "date",
+        "type",
+        "marketplace",
+        "orderId",
+        "cardSlug",
+        "card",
+        "quantity",
+        "lotName",
+        "lotCardCount",
+        "revenue",
+        "refund",
+        "adjustment",
+        "costOfGoodsSold",
+        "marketplaceFees",
+        "shipping",
+        "supplies",
+        "grading",
+        "net",
+        "notes",
+      ],
+      ...transactions.map((transaction) => {
+        const isSale = transaction.type === "SALE";
+        const isRefund =
+          transaction.type === "REFUND" || transaction.type === "RETURN";
+        const isAdjustment = transaction.type === "ADJUSTMENT";
+        const revenue = isSale ? transaction.amountCents : 0;
+        const refund = isRefund ? transaction.amountCents : 0;
+        const adjustment = isAdjustment ? transaction.amountCents : 0;
+        const costOfGoodsSold = isSale
+          ? transaction.costBasisCents
+          : isRefund
+            ? -transaction.costBasisCents
+            : 0;
+        const net =
+          revenue -
+          refund +
+          adjustment -
+          costOfGoodsSold -
+          transaction.marketplaceFees -
+          transaction.shippingCost -
+          transaction.suppliesCost -
+          transaction.gradingCost;
+        const card = transaction.card
+          ? `${transaction.card.playerName} ${transaction.card.year} ${transaction.card.title}`
+          : "";
+
+        return [
+          transaction.occurredAt.toISOString().slice(0, 10),
+          transaction.type,
+          transaction.marketplace,
+          transaction.orderId,
+          transaction.card?.slug,
+          card,
+          transaction.quantity,
+          transaction.lotName,
+          transaction.lotCardCount,
+          (revenue / 100).toFixed(2),
+          (refund / 100).toFixed(2),
+          (adjustment / 100).toFixed(2),
+          (costOfGoodsSold / 100).toFixed(2),
+          (transaction.marketplaceFees / 100).toFixed(2),
+          (transaction.shippingCost / 100).toFixed(2),
+          (transaction.suppliesCost / 100).toFixed(2),
+          (transaction.gradingCost / 100).toFixed(2),
+          (net / 100).toFixed(2),
+          transaction.notes,
+        ];
+      }),
+    ];
+
+    const csv = rows
+      .map((row) => row.map((value) => escapeCsv(value)).join(","))
+      .join("\n");
+
+    res.header("Content-Type", "text/csv; charset=utf-8");
+    res.header(
+      "Content-Disposition",
+      `attachment; filename="seller-report-${report.label}.csv"`,
+    );
+    res.send(csv);
   }),
 );
 

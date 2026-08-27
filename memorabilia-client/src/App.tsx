@@ -13,6 +13,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
 import Transactions from "./pages/Transactions";
 import Grading from "./pages/Grading";
+import Reports from "./pages/Reports";
 import { useDebounce } from "./hooks/useDebounce";
 import type {
   Card,
@@ -214,6 +215,7 @@ function App() {
         <Link to="/recommendations">Recommendations</Link>
         <Link to="/transactions">Transactions</Link>
         <Link to="/grading">Grading</Link>
+        <Link to="/reports">Reports</Link>
       </nav>
 
       <Routes>
@@ -442,6 +444,7 @@ function App() {
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/grading" element={<Grading />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </div>
   );

@@ -193,6 +193,12 @@ export type SellerSummary = {
   byCard: CardSellerTotals[];
 };
 
+export type SellerReport = SellerSummary & {
+  label: string;
+  year: number;
+  month: string | null;
+};
+
 export type SellerTransactionType =
   | "PURCHASE"
   | "SALE"

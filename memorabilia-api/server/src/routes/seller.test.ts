@@ -330,6 +330,136 @@ describe("seller routes", () => {
     });
   });
 
+  describe("GET /seller/reports", () => {
+    it("returns a year-to-date seller report", async () => {
+      transactionMock.findMany.mockResolvedValue([
+        {
+          type: "SALE",
+          occurredAt: new Date("2026-03-20T12:00:00.000Z"),
+          amountCents: 20000,
+          costBasisCents: 8000,
+          marketplace: "eBay",
+          marketplaceFees: 2600,
+          shippingCost: 700,
+          gradingCost: 2500,
+          suppliesCost: 300,
+          card: {
+            id: "card-1",
+            playerName: "Ken Griffey Jr.",
+            title: "Rookie Card",
+            year: 1989,
+            manufacturer: "Upper Deck",
+          },
+        },
+      ]);
+
+      const response = await request(app)
+        .get("/seller/reports")
+        .query({ year: "2026" })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        label: "2026",
+        year: 2026,
+        transactionCount: 1,
+        totals: {
+          revenueCents: 20000,
+          realizedCostBasisCents: 8000,
+          marketplaceFeesCents: 2600,
+          shippingCostCents: 700,
+          gradingCostCents: 2500,
+          suppliesCostCents: 300,
+          netProfitCents: 5900,
+        },
+      });
+      expect(transactionMock.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            occurredAt: {
+              gte: new Date("2026-01-01T00:00:00.000Z"),
+              lt: new Date("2027-01-01T00:00:00.000Z"),
+            },
+          },
+        }),
+      );
+    });
+
+    it("returns a monthly seller report when month is provided", async () => {
+      transactionMock.findMany.mockResolvedValue([]);
+
+      const response = await request(app)
+        .get("/seller/reports")
+        .query({ year: "2026", month: "2026-08" })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        label: "2026-08",
+        year: 2026,
+        month: "2026-08",
+        transactionCount: 0,
+      });
+      expect(transactionMock.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            occurredAt: {
+              gte: new Date("2026-08-01T00:00:00.000Z"),
+              lt: new Date("2026-09-01T00:00:00.000Z"),
+            },
+          },
+        }),
+      );
+    });
+  });
+
+  describe("GET /seller/reports/export.csv", () => {
+    it("exports accountant-friendly seller records", async () => {
+      transactionMock.findMany.mockResolvedValue([
+        {
+          type: "SALE",
+          occurredAt: new Date("2026-08-20T12:00:00.000Z"),
+          amountCents: 10000,
+          costBasisCents: 3000,
+          quantity: 1,
+          lotName: null,
+          lotCardCount: null,
+          marketplace: "eBay",
+          orderId: "ORDER-1",
+          marketplaceFees: 1300,
+          shippingCost: 500,
+          gradingCost: 0,
+          suppliesCost: 200,
+          notes: "Shipped first class",
+          card: {
+            slug: "ken-griffey-jr-1989-upper-deck-rookie-card-1",
+            playerName: "Ken Griffey Jr.",
+            title: "Rookie Card",
+            year: 1989,
+            manufacturer: "Upper Deck",
+            cardNumber: "1",
+          },
+        },
+      ]);
+
+      const response = await request(app)
+        .get("/seller/reports/export.csv")
+        .query({ month: "2026-08" })
+        .expect(200);
+
+      expect(response.header["content-type"]).toContain("text/csv");
+      expect(response.header["content-disposition"]).toContain(
+        "seller-report-2026-08.csv",
+      );
+      expect(response.text).toContain(
+        '"date","type","marketplace","orderId","cardSlug","card","quantity"',
+      );
+      expect(response.text).toContain(
+        '"2026-08-20","SALE","eBay","ORDER-1","ken-griffey-jr-1989-upper-deck-rookie-card-1","Ken Griffey Jr. 1989 Rookie Card","1"',
+      );
+      expect(response.text).toContain('"100.00","0.00","0.00","30.00"');
+      expect(response.text).toContain('"13.00","5.00","2.00","0.00","50.00"');
+    });
+  });
+
   describe("POST /seller/transactions", () => {
     it("creates a seller transaction", async () => {
       const transaction = {

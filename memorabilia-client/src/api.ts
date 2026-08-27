@@ -6,6 +6,7 @@ import type {
   GradingSubmissionBatch,
   RecommendationsResponse,
   SellerSummary,
+  SellerReport,
   SellerTransaction,
   SellerTransactionImportInput,
   SellerTransactionsResponse,
@@ -105,6 +106,16 @@ export async function returnGradingBatch(
 
 export async function fetchSellerSummary(): Promise<SellerSummary> {
   return requestJson<SellerSummary>("/seller/summary");
+}
+
+export async function fetchSellerReport(
+  queryString = "",
+): Promise<SellerReport> {
+  return requestJson<SellerReport>(`/seller/reports${queryString}`);
+}
+
+export function sellerReportExportUrl(queryString = "") {
+  return `${API_BASE}/seller/reports/export.csv${queryString}`;
 }
 
 export async function fetchSellerTransactions(
