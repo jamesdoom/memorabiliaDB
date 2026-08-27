@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import * as dotenv from "dotenv";
 import cardsRouter from "./routes/cards";
+import sellerRouter from "./routes/seller";
 import uploadRouter from "./routes/upload";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -39,6 +40,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/cards", cardsRouter);
+app.use("/seller", sellerRouter);
 app.use("/upload", uploadRouter);
 
 app.use(errorHandler);

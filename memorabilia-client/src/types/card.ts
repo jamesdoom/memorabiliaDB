@@ -71,3 +71,23 @@ export type RecommendationsResponse = {
   grade: RecommendationCard[];
   sellRaw: RecommendationCard[];
 };
+
+export type SellerTotals = {
+  revenueCents: number;
+  purchaseCostCents: number;
+  marketplaceFeesCents: number;
+  shippingCostCents: number;
+  gradingCostCents: number;
+  suppliesCostCents: number;
+  netProfitCents: number;
+};
+
+export type MonthlySellerTotals = SellerTotals & {
+  month: string;
+};
+
+export type SellerSummary = {
+  transactionCount: number;
+  totals: SellerTotals;
+  monthly: MonthlySellerTotals[];
+};

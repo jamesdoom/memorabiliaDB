@@ -1,6 +1,6 @@
 # MemorabiliaDB
 
-MemorabiliaDB is a full-stack sports card inventory app for tracking collection value, valuation confidence, card images, grading candidates, and listing status. It was built as a practical collector workflow: import a CSV, review the inventory, identify cards worth grading, manually update valuation metadata, upload front/back images, and move cards through status states as cards are listed or graded.
+MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports card inventory, valuation confidence, card images, grading candidates, listing status, and seller profit. It was built as a practical collector workflow: import an inventory CSV, review the collection, identify cards worth grading, manually update valuation metadata, upload front/back images, move cards through status states, and layer purchase/sale records on top for seller reporting.
 
 ## Screenshots
 
@@ -19,6 +19,7 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 ## Feature Walkthrough
 
 - Inventory dashboard with total estimated raw value, perfect-condition value, and potential upside.
+- Seller dashboard snapshot with revenue, cost basis, marketplace fees, shipping, grading, supplies, net profit, and latest monthly profit.
 - Valuation progress summary showing valued cards, cards that still need valuation, average confidence, and latest valuation update.
 - Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
 - Filters for player name, manufacturer, year range, card status, valuation status, and oldest valuation review.
@@ -28,6 +29,7 @@ MemorabiliaDB is a full-stack sports card inventory app for tracking collection 
 - Manual valuation workflow for raw value, perfect-condition value, source, source URL, confidence, notes, and last-valued timestamp.
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
 - CSV import script for bulk-loading and syncing card data, including optional valuation metadata.
+- Separate transaction CSV import script for purchases and sales without mutating the source inventory CSV.
 - Centralized client API layer with user-visible loading and error feedback.
 - Deployment-ready API configuration for hosted ports and client origins.
 - API route tests for the core card workflows.
@@ -55,11 +57,15 @@ flowchart LR
   API --> Cloudinary["Cloudinary image storage"]
   CSV["cards.csv"] --> Import["CSV import script"]
   Import --> Prisma
+  LedgerCSV["purchases/sales CSV"] --> LedgerImport["Transaction import script"]
+  LedgerImport --> Prisma
 ```
 
 The client talks to the API through a centralized request layer in `memorabilia-client/src/api.ts`. The API exposes card, summary, recommendation, status, valuation, and upload routes, with Prisma handling database access. Image uploads are stored in Cloudinary, while the database stores the resulting image URLs.
 
 Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
+
+Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases and sales are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, and grading return-on-investment from auditable seller events.
 
 ## Valuation Workflow
 
@@ -70,6 +76,30 @@ The valuation workflow is designed to help a collector work through a large inve
 3. Open a card and edit raw value, perfect-condition value, source, source URL, confidence, and notes.
 4. Save the valuation to update the card, refresh the inventory summary, and change the tile badge from `Unvalued` to `Updated <date>`.
 5. Use `Valued` and `Oldest valuation first` to audit older estimates over time.
+
+## Seller Ledger Workflow
+
+The seller dashboard starts with a transaction ledger for purchases and sales:
+
+1. Keep `memorabilia-api/server/cards.csv` as the current inventory source.
+2. Create a separate CSV for purchases, sales, or marketplace exports.
+3. Import the ledger CSV with `npm run import:transactions -- ./your-transactions.csv`.
+4. Open the client dashboard to review revenue, purchase cost, fees, shipping, grading, supplies, and net profit.
+5. Use the monthly totals as the foundation for future profit and tax reporting.
+
+Supported transaction CSV columns:
+
+```text
+type,occurredAt,amount,amountCents,cardId,cardSlug,quantity,marketplace,orderId,marketplaceFees,shippingCost,gradingCost,suppliesCost,notes
+```
+
+Notes:
+
+- `type` must be `PURCHASE` or `SALE`.
+- `occurredAt` accepts a date such as `2026-08-27`.
+- Use either `amount` in dollars, such as `24.99`, or `amountCents`, such as `2499`.
+- `cardId` or `cardSlug` can link a transaction to an inventory card, but either may be left blank for now.
+- Cost columns use dollar amounts and are included in net profit.
 
 ## Project Structure
 
@@ -249,6 +279,8 @@ Current automated tests cover:
 
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
+- `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
+- `POST /seller/transactions` transaction creation and validation rejection
 - `GET /cards/recommendations`
 - `POST /cards` card creation and slug generation
 - `PATCH /cards/:id` card detail updates
@@ -261,6 +293,9 @@ Current automated tests cover:
 ## Roadmap
 
 - Add frontend component tests for filtering, status changes, and upload feedback.
+- Add client-side CSV upload screens for seller purchases and sales.
+- Add inventory age and price-reduction recommendations.
+- Add grading submission batches for PSA, SGC, and Beckett.
 - Improve the recommendations UI with richer card previews and sorting controls.
 - Deploy the client and API after the next feature set is complete.
 - Add authentication if the app becomes multi-user.

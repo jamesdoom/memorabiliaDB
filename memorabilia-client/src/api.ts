@@ -3,6 +3,7 @@ import type {
   CardStatus,
   CardsResponse,
   RecommendationsResponse,
+  SellerSummary,
   Summary,
 } from "./types/card";
 
@@ -37,6 +38,10 @@ export async function fetchSummary(): Promise<Summary> {
 
 export async function fetchRecommendations(): Promise<RecommendationsResponse> {
   return requestJson<RecommendationsResponse>("/cards/recommendations");
+}
+
+export async function fetchSellerSummary(): Promise<SellerSummary> {
+  return requestJson<SellerSummary>("/seller/summary");
 }
 
 export type CreateCardInput = Pick<

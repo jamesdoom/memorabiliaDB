@@ -1,16 +1,23 @@
 // memorabilia-client\src\App.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { fetchCards } from "./api";
+import { fetchCards, fetchSellerSummary } from "./api";
 import Filters from "./components/Filters";
 import CardGrid from "./components/CardGrid";
 import CardModal from "./components/CardModal";
 import AddCardModal from "./components/AddCardModal";
 import CollectionValueCard from "./components/CollectionValueCard";
+import SellerSummaryCard from "./components/SellerSummaryCard";
 import { Routes, Route, Link } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
 import { useDebounce } from "./hooks/useDebounce";
-import type { Card, CardStatus, Pagination, Summary } from "./types/card";
+import type {
+  Card,
+  CardStatus,
+  Pagination,
+  SellerSummary,
+  Summary,
+} from "./types/card";
 import "./App.css";
 
 type ValuationFilter = "" | "needs" | "valued";
@@ -38,6 +45,11 @@ function App() {
   const [yearMax, setYearMax] = useState("");
 
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [sellerSummary, setSellerSummary] = useState<SellerSummary | null>(
+    null,
+  );
+  const [sellerLoading, setSellerLoading] = useState(false);
+  const [sellerError, setSellerError] = useState<string | null>(null);
   const hasFilters = manufacturer || playerName || yearMin || yearMax;
 
   const debouncedManufacturer = useDebounce(manufacturer, 400);
@@ -128,6 +140,36 @@ function App() {
     loadCards();
   }, [loadCards]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSellerSummary() {
+      setSellerLoading(true);
+      setSellerError(null);
+
+      try {
+        const response = await fetchSellerSummary();
+        if (!ignore) setSellerSummary(response);
+      } catch (error) {
+        if (!ignore) {
+          setSellerError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load seller summary",
+          );
+        }
+      } finally {
+        if (!ignore) setSellerLoading(false);
+      }
+    }
+
+    loadSellerSummary();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const resetFilters = () => {
     setManufacturer("");
     setPlayerName("");
@@ -154,9 +196,15 @@ function App() {
           element={
             <div className="container">
               <div className="headerSection">
-                <h1>Memorabilia Inventory</h1>
+                <h1>Seller Inventory Dashboard</h1>
 
                 <div className="collectionSummary">
+                  <SellerSummaryCard
+                    summary={sellerSummary}
+                    loading={sellerLoading}
+                    error={sellerError}
+                  />
+
                   {summary && (
                     <>
                       <CollectionValueCard

@@ -76,6 +76,99 @@ HEADER
   color: rgba(255, 255, 255, 0.85);
 }
 
+.sellerSummary {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: 8px;
+  background: white;
+  color: var(--yankees-text);
+  text-align: left;
+}
+
+.sellerSummaryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sellerEyebrow {
+  margin: 0 0 4px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sellerSummary h2 {
+  margin: 0;
+  color: var(--yankees-text);
+  font-size: 20px;
+}
+
+.sellerTransactionCount {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sellerMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sellerMetricGrid div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.sellerMetricGrid span,
+.sellerCostBreakdown span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.sellerMetricGrid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.sellerCostBreakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--yankees-border);
+}
+
+.sellerMuted,
+.sellerError {
+  margin: 0;
+  font-size: 13px;
+}
+
+.sellerMuted {
+  color: #6b7280;
+}
+
+.sellerError {
+  color: #991b1b;
+}
+
 /* Navigation */
 
 .navbar {
@@ -902,6 +995,10 @@ PAGINATION
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .sellerMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .detailsGrid,
   .valuationGrid {
     grid-template-columns: 1fr;
@@ -918,5 +1015,15 @@ PAGINATION
   .inventoryToolbar .primaryButton {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .sellerSummaryHeader {
+    flex-direction: column;
+  }
+
+  .sellerMetricGrid {
+    grid-template-columns: 1fr;
   }
 }
