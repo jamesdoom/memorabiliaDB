@@ -1,0 +1,33 @@
+name: Deployment Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Deployed API base URL
+        required: true
+        type: string
+      client_url:
+        description: Deployed client URL
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    name: Deployed smoke tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Smoke deployed API and client
+        env:
+          DEPLOYED_API_URL: ${{ inputs.api_url }}
+          DEPLOYED_CLIENT_URL: ${{ inputs.client_url }}
+        run: node scripts/smoke-deploy.mjs

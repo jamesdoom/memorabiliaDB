@@ -315,9 +315,9 @@ The demo script upserts only the demo cards and replaces only transactions tagge
 
 ## Deployment Readiness
 
-The project is not deployed yet, but the configuration is ready for a future hosted setup.
+The repo includes deployment-ready configuration for a hosted React client, Express API, and Postgres database.
 
-### Planned Client Hosting: Vercel
+### Client Hosting: Vercel
 
 When deploying the React client to Vercel:
 
@@ -329,14 +329,21 @@ When deploying the React client to Vercel:
 
 Do not set the build command to `vite build` directly. The project build script also runs TypeScript compilation and uses the locally installed Vite binary.
 
-### Planned API Hosting
+### API Hosting: Render
 
-The Express API can be hosted on a Node-friendly platform such as Render, Railway, Fly.io, or a similar service.
+The root `render.yaml` blueprint defines:
 
-Recommended API settings:
+- A Node web service for `memorabilia-api/server`
+- A hosted Render Postgres database
+- `DATABASE_URL` sourced from the hosted database
+- `npx prisma migrate deploy` as the pre-deploy migration step
+- `/health` as the API health check path
+
+Render service settings represented by the blueprint:
 
 - Root directory: `memorabilia-api/server`
-- Build command: `npm ci && npm run build`
+- Build command: `npm ci && npx prisma generate && npm run build`
+- Pre-deploy command: `npx prisma migrate deploy`
 - Start command: `npm start`
 - Health check path: `/health`
 
@@ -344,20 +351,38 @@ Required production API environment variables:
 
 ```text
 PORT=
-CLIENT_ORIGIN=https://your-vercel-app.vercel.app
+CLIENT_ORIGINS=https://your-vercel-app.vercel.app
 DATABASE_URL=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-`CLIENT_ORIGIN` supports a comma-separated list of allowed origins, which is useful for allowing both local development and a production Vercel URL during staged rollout.
+`CLIENT_ORIGINS` supports a comma-separated list of allowed origins, which is useful for allowing a production Vercel URL and preview URLs during staged rollout. The older `CLIENT_ORIGIN` variable is still supported for backwards compatibility.
 
 ### Database And Storage
 
-- Use a hosted PostgreSQL database and set `DATABASE_URL` on the API host.
-- Run Prisma migrations against the production database before starting the API.
+- Use hosted PostgreSQL and set `DATABASE_URL` on the API host.
+- Run Prisma migrations against the production database before starting the API. The Render blueprint does this with `npx prisma migrate deploy`.
 - Use Cloudinary for image storage and provide the Cloudinary credentials to the API host.
+
+### Deployed Smoke Tests
+
+After the API and client are live, run the deployed smoke test locally:
+
+```bash
+DEPLOYED_API_URL=https://your-api-host.example.com DEPLOYED_CLIENT_URL=https://your-vercel-app.vercel.app node scripts/smoke-deploy.mjs
+```
+
+GitHub Actions also includes a manual `Deployment Smoke` workflow. Run it from the Actions tab and provide:
+
+- `api_url`: deployed API base URL
+- `client_url`: deployed Vercel client URL
+
+The smoke test verifies:
+
+- `GET /health` returns the expected API health payload.
+- The deployed client responds with the Vite root element.
 
 ## Testing And CI
 

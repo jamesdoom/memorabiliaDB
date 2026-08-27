@@ -1,0 +1,31 @@
+services:
+  - type: web
+    runtime: node
+    name: memorabilia-api
+    rootDir: memorabilia-api/server
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npm run build
+    preDeployCommand: npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: memorabilia-postgres
+          property: connectionString
+      - key: CLIENT_ORIGINS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: memorabilia-postgres
+    plan: free
+    databaseName: memorabilia
+    user: memorabilia

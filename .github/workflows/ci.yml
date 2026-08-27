@@ -35,6 +35,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Smoke client build artifact
+        run: test -f dist/index.html && grep -q 'id="root"' dist/index.html
+
   client:
     name: Client
     runs-on: ubuntu-latest
