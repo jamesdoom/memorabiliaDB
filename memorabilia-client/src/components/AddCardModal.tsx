@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createCard } from "../api";
-import type { Card } from "../types/card";
+import type { Card, InventoryLocationType } from "../types/card";
 
 type Props = {
   onClose: () => void;
@@ -18,6 +18,10 @@ const initialForm = {
   serialNumber: "",
   quantity: "1",
   location: "",
+  locationType: "",
+  locationDetail: "",
+  consignmentPartner: "",
+  gradingSubmissionBatch: "",
   rookie: false,
   goodConditionValue: "",
   perfectConditionValue: "",
@@ -81,6 +85,12 @@ export default function AddCardModal({ onClose, onCreated }: Props) {
                 serialNumber: form.serialNumber.trim() || null,
                 quantity: Number(form.quantity),
                 location: form.location.trim() || null,
+                locationType:
+                  (form.locationType as InventoryLocationType) || null,
+                locationDetail: form.locationDetail.trim() || null,
+                consignmentPartner: form.consignmentPartner.trim() || null,
+                gradingSubmissionBatch:
+                  form.gradingSubmissionBatch.trim() || null,
                 rookie: form.rookie,
                 goodConditionValue,
                 perfectConditionValue,
@@ -240,7 +250,7 @@ export default function AddCardModal({ onClose, onCreated }: Props) {
             </label>
 
             <label>
-              Location
+              Location note
               <input
                 type="text"
                 value={form.location}
@@ -248,6 +258,69 @@ export default function AddCardModal({ onClose, onCreated }: Props) {
                   setForm((current) => ({
                     ...current,
                     location: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              Location workflow
+              <select
+                value={form.locationType}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    locationType: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Unset</option>
+                <option value="BOX">Box</option>
+                <option value="SHELF">Shelf</option>
+                <option value="BINDER">Binder</option>
+                <option value="CONSIGNMENT">Consignment</option>
+                <option value="GRADING_SUBMISSION">Grading batch</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+
+            <label>
+              Box, shelf, or binder
+              <input
+                type="text"
+                value={form.locationDetail}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    locationDetail: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              Consignment partner
+              <input
+                type="text"
+                value={form.consignmentPartner}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    consignmentPartner: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              Grading batch
+              <input
+                type="text"
+                value={form.gradingSubmissionBatch}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    gradingSubmissionBatch: event.target.value,
                   }))
                 }
               />

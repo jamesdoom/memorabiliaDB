@@ -20,18 +20,45 @@ export type Card = {
   lastValuedAt: string | null;
   serialNumber: string | null;
   quantity: number;
-  status: "NEW" | "LISTED" | "GRADED";
+  status:
+    | "NEW"
+    | "READY_TO_LIST"
+    | "LISTED"
+    | "SOLD"
+    | "SHIPPED"
+    | "GRADED"
+    | "ARCHIVED";
   imageFrontUrl: string | null;
   imageBackUrl: string | null;
   location: string | null;
+  locationType:
+    | "BOX"
+    | "SHELF"
+    | "BINDER"
+    | "CONSIGNMENT"
+    | "GRADING_SUBMISSION"
+    | "OTHER"
+    | null;
+  locationDetail: string | null;
+  consignmentPartner: string | null;
+  gradingSubmissionBatch: string | null;
   listingMarketplace: string | null;
   listingUrl: string | null;
   askingPriceCents: number | null;
   listedAt: string | null;
   soldAt: string | null;
+  inventoryAgeDays: number | null;
+  listingAgeDays: number | null;
+  priceReductionRecommendation: {
+    listingAgeDays: number;
+    currentPriceCents: number;
+    reductionPercent: number;
+    recommendedPriceCents: number;
+  } | null;
 };
 
 export type CardStatus = Card["status"];
+export type InventoryLocationType = NonNullable<Card["locationType"]>;
 
 export type Pagination = {
   totalCount: number;
@@ -57,6 +84,7 @@ export type Summary = {
   missingValuations: number;
   averageValueConfidence: number;
   latestValuedAt: string | null;
+  staleListingCount: number;
   statusCounts: StatusCount[];
 };
 

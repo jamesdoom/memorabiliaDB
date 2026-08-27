@@ -16,8 +16,21 @@ enum GradingRecommendation {
 
 enum CardStatus {
   NEW
+  READY_TO_LIST
   LISTED
+  SOLD
+  SHIPPED
   GRADED
+  ARCHIVED
+}
+
+enum InventoryLocationType {
+  BOX
+  SHELF
+  BINDER
+  CONSIGNMENT
+  GRADING_SUBMISSION
+  OTHER
 }
 
 enum SellerTransactionType {
@@ -54,6 +67,10 @@ model Card {
   serialNumber          String?
   quantity              Int      @default(1)
   location              String?
+  locationType          InventoryLocationType?
+  locationDetail        String?
+  consignmentPartner    String?
+  gradingSubmissionBatch String?
   listingMarketplace    String?
   listingUrl            String?
   askingPriceCents      Int?

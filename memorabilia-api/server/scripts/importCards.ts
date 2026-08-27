@@ -29,6 +29,10 @@ interface RawCardRow {
   serialNumber?: string;
   quantity?: string;
   location?: string;
+  locationType?: string;
+  locationDetail?: string;
+  consignmentPartner?: string;
+  gradingSubmissionBatch?: string;
   listingMarketplace?: string;
   listingUrl?: string;
   askingPriceCents?: string;
@@ -185,6 +189,21 @@ async function main() {
         serialNumber: row.serialNumber || null,
         quantity: row.quantity ? Number(row.quantity) : 1,
         location: row.location || null,
+        locationType:
+          row.locationType &&
+          [
+            "BOX",
+            "SHELF",
+            "BINDER",
+            "CONSIGNMENT",
+            "GRADING_SUBMISSION",
+            "OTHER",
+          ].includes(row.locationType.toUpperCase())
+            ? (row.locationType.toUpperCase() as any)
+            : null,
+        locationDetail: row.locationDetail || null,
+        consignmentPartner: row.consignmentPartner || null,
+        gradingSubmissionBatch: row.gradingSubmissionBatch || null,
         listingMarketplace: row.listingMarketplace || null,
         listingUrl: row.listingUrl || null,
         askingPriceCents: parseOptionalInt(row.askingPriceCents),
@@ -228,6 +247,10 @@ async function main() {
           serialNumber: card.serialNumber,
           quantity: card.quantity,
           location: card.location,
+          locationType: card.locationType,
+          locationDetail: card.locationDetail,
+          consignmentPartner: card.consignmentPartner,
+          gradingSubmissionBatch: card.gradingSubmissionBatch,
           listingMarketplace: card.listingMarketplace,
           listingUrl: card.listingUrl,
           askingPriceCents: card.askingPriceCents,

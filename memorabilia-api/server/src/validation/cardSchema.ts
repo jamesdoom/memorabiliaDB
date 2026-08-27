@@ -2,6 +2,25 @@
 
 import { z } from "zod";
 
+export const cardStatusSchema = z.enum([
+  "NEW",
+  "READY_TO_LIST",
+  "LISTED",
+  "SOLD",
+  "SHIPPED",
+  "GRADED",
+  "ARCHIVED",
+]);
+
+export const inventoryLocationTypeSchema = z.enum([
+  "BOX",
+  "SHELF",
+  "BINDER",
+  "CONSIGNMENT",
+  "GRADING_SUBMISSION",
+  "OTHER",
+]);
+
 export const cardSchema = z.object({
   playerName: z.string().min(1, "Player name is required"),
   sport: z.string().min(1),
@@ -13,6 +32,7 @@ export const cardSchema = z.object({
   imageFrontUrl: z.string().url().optional().nullable(),
   imageBackUrl: z.string().url().optional().nullable(),
   rookie: z.boolean(),
+  status: cardStatusSchema.optional(),
   goodConditionValue: z.number().int().min(0).optional().nullable(),
   perfectConditionValue: z.number().int().min(0).optional().nullable(),
   valueSource: z.string().optional().nullable(),
@@ -23,6 +43,10 @@ export const cardSchema = z.object({
   serialNumber: z.string().optional().nullable(),
   quantity: z.number().int().min(1).optional(),
   location: z.string().optional().nullable(),
+  locationType: inventoryLocationTypeSchema.optional().nullable(),
+  locationDetail: z.string().max(120).optional().nullable(),
+  consignmentPartner: z.string().max(120).optional().nullable(),
+  gradingSubmissionBatch: z.string().max(120).optional().nullable(),
   listingMarketplace: z.string().max(100).optional().nullable(),
   listingUrl: z.string().url().optional().nullable(),
   askingPriceCents: z.number().int().min(0).optional().nullable(),

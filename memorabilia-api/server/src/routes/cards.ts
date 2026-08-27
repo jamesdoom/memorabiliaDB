@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { Prisma } from "@prisma/client";
 import {
   cardSchema,
+  cardStatusSchema,
   partialCardSchema,
   valuationSchema,
 } from "../validation/cardSchema";
@@ -12,6 +13,64 @@ import { buildValuationUpdate } from "../services/valuationService";
 import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
+const STALE_LISTING_DAYS = 45;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function daysSince(date: Date | string | null | undefined) {
+  if (!date) return null;
+
+  const timestamp = new Date(date).getTime();
+  if (Number.isNaN(timestamp)) return null;
+
+  return Math.max(0, Math.floor((Date.now() - timestamp) / MS_PER_DAY));
+}
+
+function buildPriceReduction(card: {
+  status: string;
+  listedAt?: Date | string | null;
+  askingPriceCents?: number | null;
+  goodConditionValue?: number | null;
+}) {
+  const listingAgeDays = daysSince(card.listedAt);
+
+  if (card.status !== "LISTED" || listingAgeDays === null) {
+    return null;
+  }
+
+  const currentPriceCents =
+    card.askingPriceCents ?? (card.goodConditionValue ?? 0) * 100;
+
+  if (listingAgeDays < STALE_LISTING_DAYS || currentPriceCents <= 0) {
+    return null;
+  }
+
+  const reductionPercent =
+    listingAgeDays >= 180 ? 20 : listingAgeDays >= 90 ? 15 : 10;
+
+  return {
+    listingAgeDays,
+    currentPriceCents,
+    reductionPercent,
+    recommendedPriceCents: Math.round(
+      currentPriceCents * (1 - reductionPercent / 100),
+    ),
+  };
+}
+
+function enrichCardForOperations<T extends {
+  createdAt?: Date | string;
+  listedAt?: Date | string | null;
+  status: string;
+  askingPriceCents?: number | null;
+  goodConditionValue?: number | null;
+}>(card: T) {
+  return {
+    ...card,
+    inventoryAgeDays: daysSince(card.createdAt),
+    listingAgeDays: daysSince(card.listedAt),
+    priceReductionRecommendation: buildPriceReduction(card),
+  };
+}
 
 function createCardSlug(card: {
   playerName: string;
@@ -40,7 +99,17 @@ function createCardSlug(card: {
 router.get(
   "/summary",
   asyncHandler(async (req, res) => {
-    const totalCards = await prisma.card.count();
+    const [totalCards, staleListingCount] = await Promise.all([
+      prisma.card.count(),
+      prisma.card.count({
+        where: {
+          status: "LISTED",
+          listedAt: {
+            lte: new Date(Date.now() - STALE_LISTING_DAYS * MS_PER_DAY),
+          },
+        },
+      }),
+    ]);
 
     const statusCounts = await prisma.card.groupBy({
       by: ["status"],
@@ -93,6 +162,7 @@ router.get(
       averageValueConfidence:
         (valuationAggregate._avg as any).valueConfidence ?? 0,
       latestValuedAt: (valuationAggregate._max as any).lastValuedAt ?? null,
+      staleListingCount,
       statusCounts,
     });
   }),
@@ -138,7 +208,9 @@ router.get(
         gradingRecommendation: {
           in: ["YES", "MAYBE"],
         },
-        status: "NEW",
+        status: {
+          in: ["NEW", "READY_TO_LIST"],
+        },
       },
       orderBy: {
         gradingProfitPotential: "desc",
@@ -149,7 +221,9 @@ router.get(
     const cardsToSellRaw = await prisma.card.findMany({
       where: {
         gradingRecommendation: "NO",
-        status: "NEW",
+        status: {
+          in: ["NEW", "READY_TO_LIST"],
+        },
         goodConditionValue: {
           gt: 0,
         },
@@ -201,6 +275,9 @@ router.get(
     const location = req.query.location
       ? String(req.query.location)
       : undefined;
+    const locationType = req.query.locationType
+      ? String(req.query.locationType)
+      : undefined;
 
     const playerName = req.query.playerName
       ? String(req.query.playerName)
@@ -213,11 +290,18 @@ router.get(
     const valuationStatus = req.query.valuationStatus
       ? String(req.query.valuationStatus)
       : undefined;
+    const listingHealth = req.query.listingHealth
+      ? String(req.query.listingHealth)
+      : undefined;
 
     const where: Prisma.CardWhereInput & Record<string, unknown> = {};
 
     if (status) {
       where.status = status as any;
+    }
+
+    if (locationType) {
+      where.locationType = locationType as any;
     }
 
     if (valuationStatus === "needs") {
@@ -230,6 +314,13 @@ router.get(
       };
     }
 
+    if (listingHealth === "stale") {
+      where.status = "LISTED";
+      where.listedAt = {
+        lte: new Date(Date.now() - STALE_LISTING_DAYS * MS_PER_DAY),
+      };
+    }
+
     if (manufacturer) {
       where.manufacturer = {
         contains: manufacturer,
@@ -238,7 +329,32 @@ router.get(
     }
 
     if (location) {
-      where.location = location;
+      where.OR = [
+        {
+          location: {
+            contains: location,
+            mode: "insensitive",
+          },
+        },
+        {
+          locationDetail: {
+            contains: location,
+            mode: "insensitive",
+          },
+        },
+        {
+          consignmentPartner: {
+            contains: location,
+            mode: "insensitive",
+          },
+        },
+        {
+          gradingSubmissionBatch: {
+            contains: location,
+            mode: "insensitive",
+          },
+        },
+      ];
     }
 
     if (playerName) {
@@ -261,6 +377,7 @@ router.get(
       aggregate,
       valuedCount,
       valuationAggregate,
+      staleListingCount,
     ] = await Promise.all([
       prisma.card.count({ where }),
 
@@ -314,10 +431,20 @@ router.get(
           lastValuedAt: true,
         } as any,
       } as any),
+
+      prisma.card.count({
+        where: {
+          ...where,
+          status: "LISTED",
+          listedAt: {
+            lte: new Date(Date.now() - STALE_LISTING_DAYS * MS_PER_DAY),
+          },
+        } as any,
+      }),
     ]);
 
     res.json({
-      data: cards,
+      data: cards.map(enrichCardForOperations),
       pagination: {
         totalCount,
         currentPage: page,
@@ -336,6 +463,7 @@ router.get(
         averageValueConfidence:
           (valuationAggregate._avg as any).valueConfidence ?? 0,
         latestValuedAt: (valuationAggregate._max as any).lastValuedAt ?? null,
+        staleListingCount,
       },
     });
   }),
@@ -428,13 +556,15 @@ router.patch(
     const id = String(req.params.id);
     const { status } = req.body;
 
-    if (!["NEW", "LISTED", "GRADED"].includes(status)) {
+    const parsedStatus = cardStatusSchema.safeParse(status);
+
+    if (!parsedStatus.success) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
     const updated = await prisma.card.update({
       where: { id },
-      data: { status },
+      data: { status: parsedStatus.data },
     });
 
     res.json(updated);

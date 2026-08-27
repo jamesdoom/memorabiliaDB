@@ -5,11 +5,15 @@ type Props = {
   playerName: string;
   yearMin: string;
   yearMax: string;
+  location: string;
+  locationType: string;
 
   setManufacturer: (v: string) => void;
   setPlayerName: (v: string) => void;
   setYearMin: (v: string) => void;
   setYearMax: (v: string) => void;
+  setLocation: (v: string) => void;
+  setLocationType: (v: string) => void;
 
   hasFilters: boolean;
   resetFilters: () => void;
@@ -20,11 +24,15 @@ export default function Filters({
   playerName,
   yearMin,
   yearMax,
+  location,
+  locationType,
 
   setManufacturer,
   setPlayerName,
   setYearMin,
   setYearMax,
+  setLocation,
+  setLocationType,
   hasFilters,
   resetFilters,
 }: Props) {
@@ -56,6 +64,28 @@ export default function Filters({
         value={yearMin}
         onChange={(e) => setYearMin(e.target.value)}
       />
+
+      <input
+        className="filterInput"
+        type="text"
+        placeholder="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+      />
+
+      <select
+        className="filterInput"
+        value={locationType}
+        onChange={(e) => setLocationType(e.target.value)}
+      >
+        <option value="">Any location</option>
+        <option value="BOX">Box</option>
+        <option value="SHELF">Shelf</option>
+        <option value="BINDER">Binder</option>
+        <option value="CONSIGNMENT">Consignment</option>
+        <option value="GRADING_SUBMISSION">Grading batch</option>
+        <option value="OTHER">Other</option>
+      </select>
 
       <input
         className="filterInput small"

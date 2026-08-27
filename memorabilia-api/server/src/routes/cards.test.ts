@@ -54,7 +54,10 @@ describe("cards routes", () => {
         },
       ];
 
-      cardMock.count.mockResolvedValueOnce(12).mockResolvedValueOnce(8);
+      cardMock.count
+        .mockResolvedValueOnce(12)
+        .mockResolvedValueOnce(8)
+        .mockResolvedValueOnce(0);
       cardMock.findMany.mockResolvedValue(cards);
       cardMock.groupBy.mockResolvedValue([
         { status: "NEW", _count: { status: 10 } },
@@ -96,7 +99,14 @@ describe("cards routes", () => {
         .expect(200);
 
       expect(response.body).toEqual({
-        data: cards,
+        data: [
+          {
+            ...cards[0],
+            inventoryAgeDays: null,
+            listingAgeDays: null,
+            priceReductionRecommendation: null,
+          },
+        ],
         pagination: {
           totalCount: 12,
           currentPage: 2,
@@ -113,6 +123,7 @@ describe("cards routes", () => {
           missingValuations: 4,
           averageValueConfidence: 76,
           latestValuedAt: "2026-06-10T12:00:00.000Z",
+          staleListingCount: 0,
           statusCounts: [
             { status: "NEW", _count: { status: 10 } },
             { status: "LISTED", _count: { status: 2 } },
@@ -153,10 +164,22 @@ describe("cards routes", () => {
           },
         },
       });
+      expect(cardMock.count).toHaveBeenNthCalledWith(3, {
+        where: {
+          ...expectedWhere,
+          status: "LISTED",
+          listedAt: {
+            lte: expect.any(Date),
+          },
+        },
+      });
     });
 
     it("filters cards that need valuation and sorts by oldest valuation", async () => {
-      cardMock.count.mockResolvedValueOnce(3).mockResolvedValueOnce(0);
+      cardMock.count
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(0)
+        .mockResolvedValueOnce(0);
       cardMock.findMany.mockResolvedValue([]);
       cardMock.groupBy.mockResolvedValue([]);
       cardMock.aggregate
@@ -198,6 +221,74 @@ describe("cards routes", () => {
         },
       });
     });
+
+    it("filters stale listings and returns price reduction recommendations", async () => {
+      const listedAt = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
+
+      cardMock.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(1);
+      cardMock.findMany.mockResolvedValue([
+        {
+          id: "card-1",
+          playerName: "Ken Griffey Jr.",
+          title: "Rookie Card",
+          year: 1989,
+          manufacturer: "Upper Deck",
+          status: "LISTED",
+          listedAt,
+          askingPriceCents: 10000,
+          goodConditionValue: 80,
+        },
+      ]);
+      cardMock.groupBy.mockResolvedValue([]);
+      cardMock.aggregate
+        .mockResolvedValueOnce({
+          _sum: {
+            goodConditionValue: null,
+            perfectConditionValue: null,
+          },
+          _avg: {
+            goodConditionValue: null,
+            perfectConditionValue: null,
+          },
+        })
+        .mockResolvedValueOnce({
+          _avg: {
+            valueConfidence: null,
+          },
+          _max: {
+            lastValuedAt: null,
+          },
+        });
+
+      const response = await request(app)
+        .get("/cards")
+        .query({
+          listingHealth: "stale",
+        })
+        .expect(200);
+
+      expect(response.body.data[0].priceReductionRecommendation).toMatchObject({
+        reductionPercent: 15,
+        currentPriceCents: 10000,
+        recommendedPriceCents: 8500,
+      });
+      expect(cardMock.findMany).toHaveBeenCalledWith({
+        where: {
+          status: "LISTED",
+          listedAt: {
+            lte: expect.any(Date),
+          },
+        },
+        skip: 0,
+        take: 20,
+        orderBy: {
+          importOrder: "asc",
+        },
+      });
+    });
   });
 
   describe("GET /cards/recommendations", () => {
@@ -222,7 +313,9 @@ describe("cards routes", () => {
           gradingRecommendation: {
             in: ["YES", "MAYBE"],
           },
-          status: "NEW",
+          status: {
+            in: ["NEW", "READY_TO_LIST"],
+          },
         },
         orderBy: {
           gradingProfitPotential: "desc",
@@ -232,7 +325,9 @@ describe("cards routes", () => {
       expect(cardMock.findMany).toHaveBeenNthCalledWith(2, {
         where: {
           gradingRecommendation: "NO",
-          status: "NEW",
+        status: {
+          in: ["NEW", "READY_TO_LIST"],
+        },
           goodConditionValue: {
             gt: 0,
           },
@@ -269,7 +364,7 @@ describe("cards routes", () => {
     it("rejects invalid card statuses", async () => {
       const response = await request(app)
         .patch("/cards/card-1/status")
-        .send({ status: "SOLD" })
+        .send({ status: "DONATED" })
         .expect(400);
 
       expect(response.body).toEqual({ error: "Invalid status" });

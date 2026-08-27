@@ -31,12 +31,35 @@ export default function CardItem({ card, onSelect }: Props) {
           {card.year} - {card.manufacturer}
         </p>
 
+        <p className="cardStatusBadge">{card.status.replaceAll("_", " ")}</p>
+
+        {card.inventoryAgeDays !== null && (
+          <p className="cardOperationalMeta">
+            Inventory age: {card.inventoryAgeDays} days
+          </p>
+        )}
+
+        {card.listingAgeDays !== null && (
+          <p className="cardOperationalMeta">
+            Listed: {card.listingAgeDays} days
+          </p>
+        )}
+
         {card.goodConditionValue !== null && (
           <p className="cardGoodValue">Raw: ${card.goodConditionValue}</p>
         )}
 
         {card.perfectConditionValue !== null && (
           <p className="cardPSAValue">PSA10: ${card.perfectConditionValue}</p>
+        )}
+
+        {card.priceReductionRecommendation && (
+          <p className="priceReductionBadge">
+            Reduce {card.priceReductionRecommendation.reductionPercent}% to $
+            {(
+              card.priceReductionRecommendation.recommendedPriceCents / 100
+            ).toFixed(2)}
+          </p>
         )}
 
         {card.valueSource && (

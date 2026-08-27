@@ -23,7 +23,22 @@ import type {
 import "./App.css";
 
 type ValuationFilter = "" | "needs" | "valued";
+type ListingHealthFilter = "" | "stale";
 type SortMode = "" | "oldestValued";
+
+const statusOptions: CardStatus[] = [
+  "NEW",
+  "READY_TO_LIST",
+  "LISTED",
+  "SOLD",
+  "SHIPPED",
+  "GRADED",
+  "ARCHIVED",
+];
+
+function formatStatus(status: CardStatus) {
+  return status.replaceAll("_", " ");
+}
 
 function App() {
   const [cards, setCards] = useState<Card[]>([]);
@@ -34,6 +49,8 @@ function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<CardStatus | "">("");
   const [valuationFilter, setValuationFilter] = useState<ValuationFilter>("");
+  const [listingHealthFilter, setListingHealthFilter] =
+    useState<ListingHealthFilter>("");
   const [sortMode, setSortMode] = useState<SortMode>("");
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -45,6 +62,8 @@ function App() {
   const [playerName, setPlayerName] = useState("");
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationType, setLocationType] = useState("");
 
   const [summary, setSummary] = useState<Summary | null>(null);
   const [sellerSummary, setSellerSummary] = useState<SellerSummary | null>(
@@ -52,12 +71,14 @@ function App() {
   );
   const [sellerLoading, setSellerLoading] = useState(false);
   const [sellerError, setSellerError] = useState<string | null>(null);
-  const hasFilters = manufacturer || playerName || yearMin || yearMax;
+  const hasFilters =
+    manufacturer || playerName || yearMin || yearMax || location || locationType;
 
   const debouncedManufacturer = useDebounce(manufacturer, 400);
   const debouncedPlayerName = useDebounce(playerName, 400);
   const debouncedYearMin = useDebounce(yearMin, 400);
   const debouncedYearMax = useDebounce(yearMax, 400);
+  const debouncedLocation = useDebounce(location, 400);
 
   useEffect(() => {
     setPage(1);
@@ -68,6 +89,7 @@ function App() {
     yearMax,
     statusFilter,
     valuationFilter,
+    listingHealthFilter,
     sortMode,
   ]);
 
@@ -100,8 +122,12 @@ function App() {
     if (debouncedYearMin) params.append("yearMin", debouncedYearMin);
 
     if (debouncedYearMax) params.append("yearMax", debouncedYearMax);
+    if (debouncedLocation) params.append("location", debouncedLocation);
+    if (locationType) params.append("locationType", locationType);
     if (statusFilter) params.append("status", statusFilter);
     if (valuationFilter) params.append("valuationStatus", valuationFilter);
+    if (listingHealthFilter)
+      params.append("listingHealth", listingHealthFilter);
     if (sortMode === "oldestValued") {
       params.append("sortBy", "lastValuedAt");
       params.append("order", "asc");
@@ -114,8 +140,11 @@ function App() {
     debouncedPlayerName,
     debouncedYearMin,
     debouncedYearMax,
+    debouncedLocation,
+    locationType,
     statusFilter,
     valuationFilter,
+    listingHealthFilter,
     sortMode,
   ]);
 
@@ -167,6 +196,8 @@ function App() {
     setPlayerName("");
     setYearMin("");
     setYearMax("");
+    setLocation("");
+    setLocationType("");
   };
 
   const getCount = (status: CardStatus) =>
@@ -209,32 +240,22 @@ function App() {
                         missingValuations={summary.missingValuations}
                         averageValueConfidence={summary.averageValueConfidence}
                         latestValuedAt={summary.latestValuedAt}
+                        staleListingCount={summary.staleListingCount}
                       />
 
                       <p className="statusFilterLabel">Filter by Status:</p>
 
                       <div>
                         <div className="statusFilterContainer">
-                          <p
-                            className={`statusFilter ${statusFilter === "NEW" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("NEW")}
-                          >
-                            NEW: {getCount("NEW")}
-                          </p>
-
-                          <p
-                            className={`statusFilter ${statusFilter === "LISTED" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("LISTED")}
-                          >
-                            LISTED: {getCount("LISTED")}
-                          </p>
-
-                          <p
-                            className={`statusFilter ${statusFilter === "GRADED" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("GRADED")}
-                          >
-                            GRADED: {getCount("GRADED")}
-                          </p>
+                          {statusOptions.map((status) => (
+                            <p
+                              key={status}
+                              className={`statusFilter ${statusFilter === status ? "active" : ""}`}
+                              onClick={() => setStatusFilter(status)}
+                            >
+                              {formatStatus(status)}: {getCount(status)}
+                            </p>
+                          ))}
 
                           <p
                             className={`statusFilter ${statusFilter === "" ? "active" : ""}`}
@@ -243,6 +264,21 @@ function App() {
                             ALL
                           </p>
                         </div>
+                      </div>
+
+                      <p className="statusFilterLabel">Listing Workflow:</p>
+
+                      <div className="statusFilterContainer">
+                        <p
+                          className={`statusFilter ${listingHealthFilter === "stale" ? "active" : ""}`}
+                          onClick={() =>
+                            setListingHealthFilter((current) =>
+                              current === "stale" ? "" : "stale",
+                            )
+                          }
+                        >
+                          Stale listings: {summary.staleListingCount}
+                        </p>
                       </div>
 
                       <p className="statusFilterLabel">Valuation Workflow:</p>
@@ -291,10 +327,14 @@ function App() {
                 playerName={playerName}
                 yearMin={yearMin}
                 yearMax={yearMax}
+                location={location}
+                locationType={locationType}
                 setManufacturer={setManufacturer}
                 setPlayerName={setPlayerName}
                 setYearMin={setYearMin}
                 setYearMax={setYearMax}
+                setLocation={setLocation}
+                setLocationType={setLocationType}
                 hasFilters={!!hasFilters}
                 resetFilters={resetFilters}
               />

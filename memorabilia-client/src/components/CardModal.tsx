@@ -8,7 +8,7 @@ import {
   updateCardValuation,
   uploadImage,
 } from "../api";
-import type { Card } from "../types/card";
+import type { Card, InventoryLocationType } from "../types/card";
 import SellerTransactionForm from "./SellerTransactionForm";
 
 type Props = {
@@ -52,7 +52,12 @@ export default function CardModal({
     rookie: card.rookie,
     serialNumber: card.serialNumber ?? "",
     quantity: card.quantity.toString(),
+    status: card.status,
     location: card.location ?? "",
+    locationType: card.locationType ?? "",
+    locationDetail: card.locationDetail ?? "",
+    consignmentPartner: card.consignmentPartner ?? "",
+    gradingSubmissionBatch: card.gradingSubmissionBatch ?? "",
     listingMarketplace: card.listingMarketplace ?? "",
     listingUrl: card.listingUrl ?? "",
     askingPrice: card.askingPriceCents
@@ -98,7 +103,12 @@ export default function CardModal({
       rookie: card.rookie,
       serialNumber: card.serialNumber ?? "",
       quantity: card.quantity.toString(),
+      status: card.status,
       location: card.location ?? "",
+      locationType: card.locationType ?? "",
+      locationDetail: card.locationDetail ?? "",
+      consignmentPartner: card.consignmentPartner ?? "",
+      gradingSubmissionBatch: card.gradingSubmissionBatch ?? "",
       listingMarketplace: card.listingMarketplace ?? "",
       listingUrl: card.listingUrl ?? "",
       askingPrice: card.askingPriceCents
@@ -283,6 +293,41 @@ export default function CardModal({
                 <strong>Location:</strong> {card.location}
               </p>
             )}
+            {card.locationType && (
+              <p>
+                <strong>Location workflow:</strong>{" "}
+                {card.locationType.replaceAll("_", " ")}
+              </p>
+            )}
+            {card.locationDetail && (
+              <p>
+                <strong>Location detail:</strong> {card.locationDetail}
+              </p>
+            )}
+            {card.consignmentPartner && (
+              <p>
+                <strong>Consignment:</strong> {card.consignmentPartner}
+              </p>
+            )}
+            {card.gradingSubmissionBatch && (
+              <p>
+                <strong>Grading batch:</strong> {card.gradingSubmissionBatch}
+              </p>
+            )}
+            {card.inventoryAgeDays !== null && (
+              <p>
+                <strong>Inventory age:</strong> {card.inventoryAgeDays} days
+              </p>
+            )}
+            {card.priceReductionRecommendation && (
+              <p>
+                <strong>Price reduction:</strong> Reduce{" "}
+                {card.priceReductionRecommendation.reductionPercent}% to $
+                {(
+                  card.priceReductionRecommendation.recommendedPriceCents / 100
+                ).toFixed(2)}
+              </p>
+            )}
             {card.listingMarketplace && (
               <p>
                 <strong>Listed on:</strong> {card.listingMarketplace}
@@ -352,7 +397,16 @@ export default function CardModal({
                     rookie: detailsForm.rookie,
                     serialNumber: detailsForm.serialNumber.trim() || null,
                     quantity: parseRequiredNumber(detailsForm.quantity),
+                    status: detailsForm.status,
                     location: detailsForm.location.trim() || null,
+                    locationType:
+                      (detailsForm.locationType as InventoryLocationType) ||
+                      null,
+                    locationDetail: detailsForm.locationDetail.trim() || null,
+                    consignmentPartner:
+                      detailsForm.consignmentPartner.trim() || null,
+                    gradingSubmissionBatch:
+                      detailsForm.gradingSubmissionBatch.trim() || null,
                     listingMarketplace:
                       detailsForm.listingMarketplace.trim() || null,
                     listingUrl: detailsForm.listingUrl.trim() || null,
@@ -496,6 +550,27 @@ export default function CardModal({
                 </label>
 
                 <label>
+                  Status
+                  <select
+                    value={detailsForm.status}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        status: e.target.value as Card["status"],
+                      }))
+                    }
+                  >
+                    <option value="NEW">New</option>
+                    <option value="READY_TO_LIST">Ready to list</option>
+                    <option value="LISTED">Listed</option>
+                    <option value="SOLD">Sold</option>
+                    <option value="SHIPPED">Shipped</option>
+                    <option value="GRADED">Graded</option>
+                    <option value="ARCHIVED">Archived</option>
+                  </select>
+                </label>
+
+                <label>
                   Quantity
                   <input
                     type="number"
@@ -512,7 +587,7 @@ export default function CardModal({
                 </label>
 
                 <label>
-                  Location
+                  Location note
                   <input
                     type="text"
                     value={detailsForm.location}
@@ -520,6 +595,69 @@ export default function CardModal({
                       setDetailsForm((current) => ({
                         ...current,
                         location: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Location workflow
+                  <select
+                    value={detailsForm.locationType}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        locationType: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Unset</option>
+                    <option value="BOX">Box</option>
+                    <option value="SHELF">Shelf</option>
+                    <option value="BINDER">Binder</option>
+                    <option value="CONSIGNMENT">Consignment</option>
+                    <option value="GRADING_SUBMISSION">Grading batch</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+
+                <label>
+                  Box, shelf, or binder
+                  <input
+                    type="text"
+                    value={detailsForm.locationDetail}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        locationDetail: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Consignment partner
+                  <input
+                    type="text"
+                    value={detailsForm.consignmentPartner}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        consignmentPartner: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Grading batch
+                  <input
+                    type="text"
+                    value={detailsForm.gradingSubmissionBatch}
+                    onChange={(e) =>
+                      setDetailsForm((current) => ({
+                        ...current,
+                        gradingSubmissionBatch: e.target.value,
                       }))
                     }
                   />

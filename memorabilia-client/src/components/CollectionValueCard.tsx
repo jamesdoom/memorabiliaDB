@@ -7,6 +7,7 @@ type Props = {
   missingValuations: number;
   averageValueConfidence: number;
   latestValuedAt: string | null;
+  staleListingCount: number;
 };
 
 export default function CollectionValueCard({
@@ -16,6 +17,7 @@ export default function CollectionValueCard({
   missingValuations,
   averageValueConfidence,
   latestValuedAt,
+  staleListingCount,
 }: Props) {
   const low = Math.min(good, perfect);
   const high = Math.max(good, perfect);
@@ -62,6 +64,10 @@ export default function CollectionValueCard({
         <div>
           <span className="valueLabel">Latest update</span>
           <strong>{latestValuation}</strong>
+        </div>
+        <div>
+          <span className="valueLabel">Stale listings</span>
+          <strong>{staleListingCount.toLocaleString()}</strong>
         </div>
       </div>
     </div>

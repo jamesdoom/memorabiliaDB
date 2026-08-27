@@ -28,7 +28,10 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 - Valuation progress summary showing valued cards, cards that still need valuation, average confidence, and latest valuation update.
 - Paginated card grid with card images, player names, manufacturer/year metadata, raw value, PSA 10-style value, and valuation status badges.
 - Filters for player name, manufacturer, year range, card status, valuation status, and oldest valuation review.
-- Status tracking for `NEW`, `LISTED`, and `GRADED` cards.
+- Expanded inventory operations statuses: `NEW`, `READY_TO_LIST`, `LISTED`, `SOLD`, `SHIPPED`, `GRADED`, and `ARCHIVED`.
+- Inventory age and listing age tracking from card creation/import and listing dates.
+- Stale listing queue with recommended price reductions after 45, 90, and 180 days.
+- Structured location workflows for boxes, shelves, binders, consignment, and grading submission batches.
 - Create, edit, and safely delete individual inventory records from the client.
 - Card detail modal with front/back image flipping, Cloudinary image upload, and manual valuation editing.
 - Listing workflow fields for marketplace, listing URL, asking price, listed date, and sold date.
@@ -134,6 +137,31 @@ Each card can now track listing metadata directly from the card detail editor:
 - Sold date
 
 These fields are mutable app workflow data and do not require changing the current inventory CSV. They are separate from seller transaction records so a card can be listed before a sale exists, and a sale can still be recorded later with exact fees, shipping, grading, and supplies.
+
+## Inventory Operations
+
+The inventory workflow supports a broader operational status pipeline:
+
+```text
+NEW -> READY_TO_LIST -> LISTED -> SOLD -> SHIPPED -> ARCHIVED
+```
+
+`GRADED` remains available for cards that have returned from grading or are tracked as graded inventory. The dashboard status filters show all workflow statuses, and the card detail editor can update status alongside location and listing fields.
+
+Operational location fields are separate from the original freeform `location` note:
+
+- `locationType`: box, shelf, binder, consignment, grading submission, or other
+- `locationDetail`: the box, shelf, or binder identifier
+- `consignmentPartner`: the partner holding the card
+- `gradingSubmissionBatch`: the batch identifier for cards currently in grading workflow
+
+The dashboard also tracks inventory age from the card creation/import date and listing age from `listedAt`. Listings older than 45 days receive a price-reduction recommendation:
+
+- 45-89 days: reduce by 10%
+- 90-179 days: reduce by 15%
+- 180+ days: reduce by 20%
+
+Use the `Stale listings` filter to turn those recommendations into a focused repricing queue.
 
 ## Project Structure
 
@@ -313,6 +341,7 @@ Current automated tests cover:
 
 - `GET /health`
 - `GET /cards` pagination, filters, summary shape, valuation filtering, and valuation sorting
+- `GET /cards` stale-listing filtering and price-reduction recommendations
 - `GET /seller/summary` seller revenue, cost, net profit, and monthly calculations
 - `GET /seller/summary` marketplace and linked-card profit breakdowns
 - `GET /seller/transactions` filtering, pagination, and linked card details
