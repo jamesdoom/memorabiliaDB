@@ -7,6 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "import": "ts-node scripts/importCards.ts",
     "import:transactions": "ts-node scripts/importSellerTransactions.ts",
+    "seed:demo": "ts-node scripts/seedDemoData.ts",
     "backfill-slugs": "ts-node scripts/backfillSlugs.ts",
     "test": "vitest run",
     "build": "tsc",

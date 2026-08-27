@@ -7,9 +7,11 @@ import CardGrid from "./components/CardGrid";
 import CardModal from "./components/CardModal";
 import AddCardModal from "./components/AddCardModal";
 import CollectionValueCard from "./components/CollectionValueCard";
+import DashboardLayout from "./components/DashboardLayout";
+import { InventoryValueChart } from "./components/DashboardCharts";
 import SellerCsvImport from "./components/SellerCsvImport";
 import SellerSummaryCard from "./components/SellerSummaryCard";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Recommendations from "./pages/Recommendations";
 import Transactions from "./pages/Transactions";
 import Grading from "./pages/Grading";
@@ -207,24 +209,19 @@ function App() {
 
   return (
     <div>
-      {/* Simple Navigation */}
-      <nav className="navbar">
-        <Link to="/" className="navLink">
-          Home
-        </Link>
-        <Link to="/recommendations">Recommendations</Link>
-        <Link to="/transactions">Transactions</Link>
-        <Link to="/grading">Grading</Link>
-        <Link to="/reports">Reports</Link>
-      </nav>
-
       <Routes>
-        <Route
-          path="/"
-          element={
+        <Route element={<DashboardLayout />}>
+          <Route
+            path="/"
+            element={
             <div className="container">
               <div className="headerSection">
-                <h1>Seller Inventory Dashboard</h1>
+                <div className="pageHeader">
+                  <div>
+                    <p className="sellerEyebrow">Inventory</p>
+                    <h1>Inventory Command Center</h1>
+                  </div>
+                </div>
 
                 <div className="collectionSummary">
                   <SellerSummaryCard
@@ -246,6 +243,13 @@ function App() {
                         latestValuedAt={summary.latestValuedAt}
                         staleListingCount={summary.staleListingCount}
                       />
+
+                      <section className="operationsPanel inventoryChartPanel">
+                        <div className="sectionHeader">
+                          <h2>Inventory Value</h2>
+                        </div>
+                        <InventoryValueChart summary={summary} />
+                      </section>
 
                       <p className="statusFilterLabel">Filter by Status:</p>
 
@@ -438,13 +442,19 @@ function App() {
                 />
               )}
             </div>
-          }
-        />
+            }
+          />
 
-        <Route path="/recommendations" element={<Recommendations />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/grading" element={<Grading />} />
-        <Route path="/reports" element={<Reports />} />
+          <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/sales" element={<Transactions initialType="SALE" />} />
+          <Route
+            path="/purchases"
+            element={<Transactions initialType="PURCHASE" />}
+          />
+          <Route path="/grading" element={<Grading />} />
+          <Route path="/reports" element={<Reports />} />
+        </Route>
       </Routes>
     </div>
   );

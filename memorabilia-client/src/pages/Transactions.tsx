@@ -44,11 +44,15 @@ function netImpact(transaction: SellerTransaction) {
   return sign * transaction.amountCents - totalCosts(transaction);
 }
 
-function Transactions() {
+type TransactionsProps = {
+  initialType?: TypeFilter;
+};
+
+function Transactions({ initialType = "" }: TransactionsProps) {
   const [transactions, setTransactions] = useState<SellerTransaction[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>(initialType);
   const [marketplace, setMarketplace] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +94,10 @@ function Transactions() {
     setPage(1);
   }, [typeFilter, marketplace]);
 
+  useEffect(() => {
+    setTypeFilter(initialType);
+  }, [initialType]);
+
   async function handleCreate(input: SellerTransactionImportInput) {
     await createSellerTransaction(input);
     setNotice("Transaction added.");
@@ -122,15 +130,30 @@ function Transactions() {
       <div className="pageHeader">
         <div>
           <p className="sellerEyebrow">Seller Workflow</p>
-          <h1>Transactions</h1>
+          <h1>
+            {initialType === "SALE"
+              ? "Sales"
+              : initialType === "PURCHASE"
+                ? "Purchases"
+                : "Transactions"}
+          </h1>
         </div>
       </div>
 
       <section className="operationsPanel">
         <div className="sectionHeader">
-          <h2>Manual Entry</h2>
+          <h2>
+            {initialType === "SALE"
+              ? "Manual Sale Entry"
+              : initialType === "PURCHASE"
+                ? "Manual Purchase Entry"
+                : "Manual Entry"}
+          </h2>
         </div>
-        <SellerTransactionForm onSubmit={handleCreate} />
+        <SellerTransactionForm
+          defaultType={initialType || undefined}
+          onSubmit={handleCreate}
+        />
       </section>
 
       <section className="operationsPanel">

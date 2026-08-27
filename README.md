@@ -19,6 +19,8 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 ## Feature Walkthrough
 
 - Inventory dashboard with total estimated raw value, perfect-condition value, and potential upside.
+- Dedicated seller dashboard layout with tabs for Inventory, Sales, Purchases, Reports, and Grading.
+- Lightweight charts for monthly revenue/profit and inventory value.
 - Seller dashboard snapshot with revenue, cost basis, marketplace fees, shipping, grading, supplies, net profit, and latest monthly profit.
 - Realized profit calculations that separate purchase spend from sold-card cost basis.
 - Profit breakdowns by month, marketplace, and linked card.
@@ -47,6 +49,7 @@ MemorabiliaDB is a full-stack sports card seller dashboard for tracking sports c
 - Recommendations page that separates likely grading candidates from cards better suited to sell raw.
 - CSV import script for bulk-loading and syncing card data, including optional valuation metadata.
 - Separate transaction CSV import script for purchases and sales without mutating the source inventory CSV.
+- Recruiter-friendly demo seed data that is separate from the real inventory CSV.
 - Centralized client API layer with user-visible loading and error feedback.
 - Deployment-ready API configuration for hosted ports and client origins.
 - API route tests for the core card workflows.
@@ -74,6 +77,8 @@ flowchart LR
   API --> Cloudinary["Cloudinary image storage"]
   CSV["cards.csv"] --> Import["CSV import script"]
   Import --> Prisma
+  DemoCSV["demo-data CSVs"] --> DemoSeed["Demo seed script"]
+  DemoSeed --> Prisma
   LedgerCSV["purchases/sales CSV"] --> LedgerImport["Transaction import script"]
   LedgerImport --> Prisma
 ```
@@ -83,6 +88,8 @@ The client talks to the API through a centralized request layer in `memorabilia-
 Valuation data is intentionally modeled as metadata around the existing value fields rather than as a hard dependency on a third-party price source. Today the app supports manual estimates with source, confidence, notes, and `lastValuedAt`; later, the valuation service can plug in an external provider such as eBay Browse API or PriceCharting without changing the client workflow.
 
 Seller data is modeled as a ledger layered on top of inventory. `cards.csv` can remain the real source inventory file, while purchases, sales, refunds, returns, and adjustments are imported separately as transaction records. This keeps the original inventory stable and gives the app room to calculate profit, tax reports, inventory age, listing performance, reporting exports, and grading return-on-investment from auditable seller events.
+
+The dashboard is organized around seller tasks instead of implementation details. Inventory, Sales, Purchases, Reports, and Grading each have their own tab, while the legacy all-transactions route remains available for full ledger review.
 
 ## Valuation Workflow
 
@@ -289,6 +296,22 @@ If a row includes `goodConditionValue` or `perfectConditionValue` but does not i
 - `valueSource`: `CSV import`
 - `valueConfidence`: `50`
 - `lastValuedAt`: the current import timestamp
+
+### Seed Recruiter Demo Data
+
+The demo seed is separate from `cards.csv` and is intended for portfolio walkthroughs:
+
+```bash
+cd memorabilia-api/server
+npm run seed:demo
+```
+
+Demo files live in `memorabilia-api/server/demo-data/`:
+
+- `demo-cards.csv`
+- `demo-transactions.csv`
+
+The demo script upserts only the demo cards and replaces only transactions tagged from `demo-transactions.csv`. It does not sync deletions against `cards.csv`, so it will not remove your real inventory rows.
 
 ## Deployment Readiness
 

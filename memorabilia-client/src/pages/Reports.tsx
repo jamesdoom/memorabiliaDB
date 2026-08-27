@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchSellerReport, sellerReportExportUrl } from "../api";
+import { MonthlyProfitChart } from "../components/DashboardCharts";
 import type {
   MarketplaceSellerTotals,
   MonthlySellerTotals,
@@ -244,6 +245,13 @@ function Reports() {
 
       {report && !loading && !error && (
         <>
+          <section className="operationsPanel">
+            <div className="sectionHeader">
+              <h2>Revenue And Profit Trend</h2>
+            </div>
+            <MonthlyProfitChart monthly={report.monthly} />
+          </section>
+
           <section className="operationsPanel">
             <div className="sectionHeader">
               <h2>Marketplace Breakdown</h2>

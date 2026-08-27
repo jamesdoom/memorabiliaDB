@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   SellerTransaction,
   SellerTransactionImportInput,
@@ -7,6 +7,7 @@ import type {
 
 type SellerTransactionFormProps = {
   initialTransaction?: SellerTransaction;
+  defaultType?: SellerTransactionType;
   defaultCardId?: string;
   compact?: boolean;
   onCancel?: () => void;
@@ -55,8 +56,16 @@ function optionalText(value: string) {
   return trimmed ? trimmed : null;
 }
 
-function buildInitialForm(transaction?: SellerTransaction) {
-  if (!transaction) return defaultForm;
+function buildInitialForm(
+  transaction?: SellerTransaction,
+  defaultType?: SellerTransactionType,
+) {
+  if (!transaction) {
+    return {
+      ...defaultForm,
+      type: defaultType ?? defaultForm.type,
+    };
+  }
 
   return {
     type: transaction.type,
@@ -79,15 +88,27 @@ function buildInitialForm(transaction?: SellerTransaction) {
 
 function SellerTransactionForm({
   initialTransaction,
+  defaultType,
   defaultCardId,
   compact = false,
   onCancel,
   onSubmit,
 }: SellerTransactionFormProps) {
-  const [form, setForm] = useState(() => buildInitialForm(initialTransaction));
+  const [form, setForm] = useState(() =>
+    buildInitialForm(initialTransaction, defaultType),
+  );
   const [feePreset, setFeePreset] = useState("0");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialTransaction && defaultType) {
+      setForm((current) => ({
+        ...current,
+        type: defaultType,
+      }));
+    }
+  }, [defaultType, initialTransaction]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -1,0 +1,12 @@
+type,occurredAt,amount,costBasis,cardSlug,quantity,lotName,lotCardCount,marketplace,orderId,marketplaceFees,shippingCost,gradingCost,suppliesCost,notes
+PURCHASE,2026-01-15,95.00,0.00,ken-griffey-jr-1989-upper-deck-upper-deck-rookie-1-base-set,1,,,Card Show,DEMO-PUR-001,0.00,0.00,0.00,2.00,Demo acquisition
+PURCHASE,2026-02-03,180.00,0.00,michael-jordan-1992-topps-stadium-club-members-only-1-members-only,1,,,Facebook,DEMO-PUR-002,0.00,6.00,0.00,3.50,Demo acquisition
+PURCHASE,2026-02-18,140.00,0.00,shohei-ohtani-2018-topps-chrome-rookie-150-chrome,1,,,eBay,DEMO-PUR-003,12.50,5.00,0.00,2.00,Demo acquisition
+PURCHASE,2026-03-05,210.00,0.00,victor-wembanyama-2023-panini-prizm-silver-rookie-136-prizm,1,,,Whatnot,DEMO-PUR-004,18.90,4.00,0.00,2.50,Demo acquisition
+SALE,2026-04-22,145.00,95.00,ken-griffey-jr-1989-upper-deck-upper-deck-rookie-1-base-set,1,,,eBay,DEMO-SALE-001,19.21,5.50,0.00,1.25,Demo sale
+SALE,2026-05-12,88.00,52.00,lionel-messi-2014-panini-world-cup-prizm-12-prizm,1,,,COMC,DEMO-SALE-002,8.80,0.00,0.00,0.50,Demo consignment sale
+SALE,2026-06-28,330.00,210.00,victor-wembanyama-2023-panini-prizm-silver-rookie-136-prizm,1,,,Whatnot,DEMO-SALE-003,36.30,6.75,0.00,1.75,Demo live sale
+SALE,2026-07-16,72.00,30.00,simone-biles-2021-topps-allen-ginter-93-allen-ginter,2,Olympic lot,3,eBay,DEMO-SALE-004,9.54,4.75,0.00,1.10,Demo lot sale
+REFUND,2026-07-22,12.00,5.00,simone-biles-2021-topps-allen-ginter-93-allen-ginter,1,,,eBay,DEMO-REF-001,0.00,0.00,0.00,0.00,Demo partial refund
+SALE,2026-08-10,1025.00,250.00,tom-brady-2000-bowman-bowman-rookie-236-base-set,1,,,eBay,DEMO-SALE-005,135.81,10.25,50.00,2.00,Demo graded sale
+ADJUSTMENT,2026-08-15,18.00,0.00,,1,,,COMC,DEMO-ADJ-001,0.00,0.00,0.00,0.00,Demo account credit

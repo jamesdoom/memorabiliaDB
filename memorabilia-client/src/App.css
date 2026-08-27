@@ -34,6 +34,52 @@ LAYOUT
   padding: 2rem;
 }
 
+.dashboardShell {
+  min-height: 100vh;
+}
+
+.dashboardHeader {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 2rem 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dashboardHeader h1 {
+  margin: 0;
+  color: var(--yankees-text);
+  font-size: 34px;
+}
+
+.dashboardTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dashboardTab {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.dashboardTab.active {
+  border-color: var(--yankees-blue);
+  background: var(--yankees-blue);
+  color: white;
+}
+
 .section {
   width: 100%;
   margin-bottom: 24px;
@@ -45,35 +91,33 @@ HEADER
 
 .headerSection {
   width: 100%;
-  max-width: 700px;
+  max-width: none;
   margin: 0 auto;
-  padding: 28px 24px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #0c2340 0%, #1c3d6e 100%);
-  color: white;
+  padding: 0;
+  color: var(--yankees-text);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 20px;
 }
 
 .headerSection h1 {
-  color: white;
-  font-size: 34px;
+  color: var(--yankees-text);
+  font-size: 28px;
   font-weight: 700;
   margin: 0;
-  letter-spacing: 0.5px;
 }
 
 .collectionSummary {
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 16px;
-  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  text-align: left;
 }
 
 .collectionSummary h2 {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--yankees-text);
 }
 
 .sellerSummary {
@@ -94,6 +138,10 @@ HEADER
   background: white;
   color: var(--yankees-text);
   text-align: left;
+}
+
+.inventoryChartPanel {
+  grid-column: 1 / -1;
 }
 
 .sellerSummaryHeader {
@@ -1514,7 +1562,155 @@ OPERATIONS
   min-width: 980px;
 }
 
+.chartPanel {
+  width: 100%;
+}
+
+.chartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chartLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chartLegend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legendRevenue {
+  background: #2563eb;
+}
+
+.legendProfit {
+  background: #16a34a;
+}
+
+.barChart {
+  display: grid;
+  min-height: 230px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid var(--yankees-border);
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.barGroup {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  align-items: end;
+  text-align: center;
+}
+
+.barColumns {
+  display: flex;
+  height: 170px;
+  align-items: end;
+  justify-content: center;
+  gap: 5px;
+}
+
+.bar {
+  display: block;
+  width: 22px;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+}
+
+.bar.revenue {
+  background: #2563eb;
+}
+
+.bar.profit {
+  background: #16a34a;
+}
+
+.bar.profit.negative {
+  background: #dc2626;
+}
+
+.barGroup small {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.inventoryValueChart {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.inventoryValueChart > div {
+  min-width: 0;
+}
+
+.inventoryValueChart span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.inventoryValueChart strong {
+  display: block;
+  margin: 4px 0 8px;
+  font-size: 20px;
+}
+
+.horizontalBarTrack {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.horizontalBar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.horizontalBar.raw {
+  background: #2563eb;
+}
+
+.horizontalBar.graded {
+  background: #7c3aed;
+}
+
+.horizontalBar.upside {
+  background: #16a34a;
+}
+
 @media (max-width: 720px) {
+  .dashboardHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboardTabs {
+    justify-content: flex-start;
+  }
+
+  .collectionSummary {
+    grid-template-columns: 1fr;
+  }
+
   .valuationStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1525,7 +1721,8 @@ OPERATIONS
 
   .reportMetricGrid,
   .reportSummary,
-  .reportSummary dl {
+  .reportSummary dl,
+  .inventoryValueChart {
     grid-template-columns: 1fr;
   }
 
