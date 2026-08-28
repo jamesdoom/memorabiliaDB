@@ -313,6 +313,17 @@ Demo files live in `memorabilia-api/server/demo-data/`:
 
 The demo script upserts only the demo cards and replaces only transactions tagged from `demo-transactions.csv`. It does not sync deletions against `cards.csv`, so it will not remove your real inventory rows.
 
+### Seed Hosted Portfolio Demo Data
+
+After the API has deployed and migrations have run against hosted Postgres, seed the public portfolio database with the guarded production demo command from a Render Shell or one-time job:
+
+```bash
+cd memorabilia-api/server
+DEMO_SEED_CONFIRM=seed-demo-production npm run seed:demo:production
+```
+
+This command refuses to run unless the confirmation value is present, requires a hosted PostgreSQL `DATABASE_URL`, and only reads files from `demo-data/`. It does not read or import `cards.csv`.
+
 ## Deployment Readiness
 
 The repo includes deployment-ready configuration for a hosted React client, Express API, and Postgres database.

@@ -302,8 +302,19 @@ async function seedTransactions(
   return rows.length;
 }
 
-async function main() {
-  const demoDir = path.resolve(__dirname, "../demo-data");
+function resolveDemoDir() {
+  const sourceDemoDir = path.resolve(__dirname, "../demo-data");
+  const compiledDemoDir = path.resolve(__dirname, "../../demo-data");
+
+  if (fs.existsSync(sourceDemoDir)) {
+    return sourceDemoDir;
+  }
+
+  return compiledDemoDir;
+}
+
+export async function seedDemoData() {
+  const demoDir = resolveDemoDir();
   const cardIdsBySlug = await seedCards(path.join(demoDir, "demo-cards.csv"));
   const transactionCount = await seedTransactions(
     path.join(demoDir, demoSourceFile),
@@ -312,11 +323,21 @@ async function main() {
 
   console.log(`Seeded demo cards: ${cardIdsBySlug.size}`);
   console.log(`Seeded demo transactions: ${transactionCount}`);
+}
+
+export async function disconnectDemoSeed() {
   await prisma.$disconnect();
 }
 
-main().catch(async (error) => {
-  console.error("Failed to seed demo data:", error);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+async function main() {
+  await seedDemoData();
+  await disconnectDemoSeed();
+}
+
+if (require.main === module) {
+  main().catch(async (error) => {
+    console.error("Failed to seed demo data:", error);
+    await disconnectDemoSeed();
+    process.exit(1);
+  });
+}
