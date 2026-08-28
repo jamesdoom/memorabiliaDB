@@ -342,7 +342,7 @@ The root `render.yaml` blueprint defines:
 Render service settings represented by the blueprint:
 
 - Root directory: `memorabilia-api/server`
-- Build command: `npm install && npx prisma generate && npx prisma migrate deploy && npm run build`
+- Build command: `npm install --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build`
 - Start command: `npm start`
 - Health check path: `/health`
 
@@ -350,6 +350,7 @@ Required production API environment variables:
 
 ```text
 PORT=
+NODE_VERSION=22
 CLIENT_ORIGINS=https://your-vercel-app.vercel.app
 DATABASE_URL=
 CLOUDINARY_CLOUD_NAME=
