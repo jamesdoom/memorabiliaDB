@@ -17,6 +17,7 @@ import Transactions from "./pages/Transactions";
 import Grading from "./pages/Grading";
 import Reports from "./pages/Reports";
 import { useDebounce } from "./hooks/useDebounce";
+import { portfolioReadOnly, portfolioReadOnlyMessage } from "./access";
 import type {
   Card,
   CardStatus,
@@ -224,13 +225,23 @@ function App() {
                 </div>
 
                 <div className="collectionSummary">
+                  {portfolioReadOnly && (
+                    <div className="portfolioReadOnlyBanner" role="note">
+                      <strong>Portfolio demo</strong>
+                      <span>{portfolioReadOnlyMessage}</span>
+                    </div>
+                  )}
+
                   <SellerSummaryCard
                     summary={sellerSummary}
                     loading={sellerLoading}
                     error={sellerError}
                   />
 
-                  <SellerCsvImport onImported={loadSellerSummary} />
+                  <SellerCsvImport
+                    onImported={loadSellerSummary}
+                    readOnly={portfolioReadOnly}
+                  />
 
                   {summary && (
                     <>
@@ -351,7 +362,12 @@ function App() {
                 <button
                   type="button"
                   className="primaryButton"
+                  disabled={portfolioReadOnly}
+                  title={
+                    portfolioReadOnly ? portfolioReadOnlyMessage : undefined
+                  }
                   onClick={() => {
+                    if (portfolioReadOnly) return;
                     setNotice(null);
                     setAddingCard(true);
                   }}
@@ -417,6 +433,7 @@ function App() {
                   isFlipped={isFlipped}
                   setIsFlipped={setIsFlipped}
                   loadCards={loadCards}
+                  readOnly={portfolioReadOnly}
                   onDeleted={async () => {
                     setSelectedCard(null);
                     setNotice("Card deleted successfully.");
@@ -446,13 +463,26 @@ function App() {
           />
 
           <Route path="/recommendations" element={<Recommendations />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/sales" element={<Transactions initialType="SALE" />} />
+          <Route
+            path="/transactions"
+            element={<Transactions readOnly={portfolioReadOnly} />}
+          />
+          <Route
+            path="/sales"
+            element={
+              <Transactions initialType="SALE" readOnly={portfolioReadOnly} />
+            }
+          />
           <Route
             path="/purchases"
-            element={<Transactions initialType="PURCHASE" />}
+            element={
+              <Transactions
+                initialType="PURCHASE"
+                readOnly={portfolioReadOnly}
+              />
+            }
           />
-          <Route path="/grading" element={<Grading />} />
+          <Route path="/grading" element={<Grading readOnly={portfolioReadOnly} />} />
           <Route path="/reports" element={<Reports />} />
         </Route>
       </Routes>

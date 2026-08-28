@@ -6,6 +6,7 @@ import gradingRouter from "./routes/grading";
 import sellerRouter from "./routes/seller";
 import uploadRouter from "./routes/upload";
 import { errorHandler } from "./middleware/errorHandler";
+import { requireWriteAccess } from "./middleware/writeAccess";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(requireWriteAccess);
 
 app.get("/health", (_req, res) => {
   res.json({

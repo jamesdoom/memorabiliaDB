@@ -6,6 +6,7 @@ import {
   updateSellerTransaction,
 } from "../api";
 import SellerTransactionForm from "../components/SellerTransactionForm";
+import { portfolioReadOnlyMessage } from "../access";
 import type {
   Pagination,
   SellerTransaction,
@@ -46,9 +47,10 @@ function netImpact(transaction: SellerTransaction) {
 
 type TransactionsProps = {
   initialType?: TypeFilter;
+  readOnly?: boolean;
 };
 
-function Transactions({ initialType = "" }: TransactionsProps) {
+function Transactions({ initialType = "", readOnly = false }: TransactionsProps) {
   const [transactions, setTransactions] = useState<SellerTransaction[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -99,6 +101,7 @@ function Transactions({ initialType = "" }: TransactionsProps) {
   }, [initialType]);
 
   async function handleCreate(input: SellerTransactionImportInput) {
+    if (readOnly) return;
     await createSellerTransaction(input);
     setNotice("Transaction added.");
     await loadTransactions();
@@ -108,6 +111,7 @@ function Transactions({ initialType = "" }: TransactionsProps) {
     id: string,
     input: SellerTransactionImportInput,
   ) {
+    if (readOnly) return;
     await updateSellerTransaction(id, input);
     setEditingId(null);
     setNotice("Transaction updated.");
@@ -115,6 +119,7 @@ function Transactions({ initialType = "" }: TransactionsProps) {
   }
 
   async function handleDelete(transaction: SellerTransaction) {
+    if (readOnly) return;
     const confirmed = window.confirm(
       `Delete this ${transaction.type.toLowerCase()} transaction?`,
     );
@@ -140,7 +145,15 @@ function Transactions({ initialType = "" }: TransactionsProps) {
         </div>
       </div>
 
-      <section className="operationsPanel">
+      {readOnly && (
+        <div className="portfolioReadOnlyBanner" role="note">
+          <strong>Portfolio demo</strong>
+          <span>{portfolioReadOnlyMessage}</span>
+        </div>
+      )}
+
+      {!readOnly && (
+        <section className="operationsPanel">
         <div className="sectionHeader">
           <h2>
             {initialType === "SALE"
@@ -154,7 +167,8 @@ function Transactions({ initialType = "" }: TransactionsProps) {
           defaultType={initialType || undefined}
           onSubmit={handleCreate}
         />
-      </section>
+        </section>
+      )}
 
       <section className="operationsPanel">
         <div className="sectionHeader transactionFilters">
@@ -256,6 +270,10 @@ function Transactions({ initialType = "" }: TransactionsProps) {
                         <button
                           type="button"
                           className="secondaryButton"
+                          disabled={readOnly}
+                          title={
+                            readOnly ? portfolioReadOnlyMessage : undefined
+                          }
                           onClick={() =>
                             setEditingId((current) =>
                               current === transaction.id
@@ -269,6 +287,10 @@ function Transactions({ initialType = "" }: TransactionsProps) {
                         <button
                           type="button"
                           className="dangerButton"
+                          disabled={readOnly}
+                          title={
+                            readOnly ? portfolioReadOnlyMessage : undefined
+                          }
                           onClick={() => handleDelete(transaction)}
                         >
                           Delete

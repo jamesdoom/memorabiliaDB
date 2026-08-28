@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchRecommendations, updateCardStatus } from "../api";
 import type { CardStatus, RecommendationCard } from "../types/card";
+import { portfolioReadOnly, portfolioReadOnlyMessage } from "../access";
 import "./Recommendations.css";
 
 export default function Recommendations() {
@@ -36,6 +37,7 @@ export default function Recommendations() {
     id: string,
     status: Extract<CardStatus, "LISTED" | "GRADED">,
   ) => {
+    if (portfolioReadOnly) return;
     setUpdatingId(id);
     setError(null);
 
@@ -56,6 +58,13 @@ export default function Recommendations() {
   return (
     <div className="container">
       <h1>Recommendations</h1>
+
+      {portfolioReadOnly && (
+        <div className="portfolioReadOnlyBanner" role="note">
+          <strong>Portfolio demo</strong>
+          <span>{portfolioReadOnlyMessage}</span>
+        </div>
+      )}
 
       {error && (
         <div className="inlineAlert" role="alert">
@@ -80,7 +89,10 @@ export default function Recommendations() {
                   <span>Profit: ${card.gradingProfitPotential ?? 0}</span>
                 </div>
                 <button
-                  disabled={updatingId === card.id}
+                  disabled={portfolioReadOnly || updatingId === card.id}
+                  title={
+                    portfolioReadOnly ? portfolioReadOnlyMessage : undefined
+                  }
                   onClick={() => updateStatus(card.id, "GRADED")}
                 >
                   {updatingId === card.id ? "Saving..." : "Mark Graded"}
@@ -105,7 +117,10 @@ export default function Recommendations() {
                   <span>Value: ${card.goodConditionValue ?? 0}</span>
                 </div>
                 <button
-                  disabled={updatingId === card.id}
+                  disabled={portfolioReadOnly || updatingId === card.id}
+                  title={
+                    portfolioReadOnly ? portfolioReadOnlyMessage : undefined
+                  }
                   onClick={() => updateStatus(card.id, "LISTED")}
                 >
                   {updatingId === card.id ? "Saving..." : "Mark Listed"}

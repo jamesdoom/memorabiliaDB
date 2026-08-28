@@ -15,6 +15,7 @@ import type {
   InventoryLocationType,
 } from "../types/card";
 import SellerTransactionForm from "./SellerTransactionForm";
+import { portfolioReadOnlyMessage } from "../access";
 
 type Props = {
   card: Card;
@@ -25,6 +26,7 @@ type Props = {
   setIsFlipped: (v: boolean | ((prev: boolean) => boolean)) => void;
   loadCards: () => Promise<void>;
   onDeleted: () => Promise<void>;
+  readOnly?: boolean;
 };
 
 export default function CardModal({
@@ -36,6 +38,7 @@ export default function CardModal({
   setIsFlipped,
   loadCards,
   onDeleted,
+  readOnly = false,
 }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [undoing, setUndoing] = useState(false);
@@ -98,6 +101,7 @@ export default function CardModal({
   });
   const busy =
     uploading || undoing || savingDetails || savingValuation || deleting;
+  const writeDisabled = busy || readOnly;
   const lastValuedAt = card.lastValuedAt
     ? new Date(card.lastValuedAt).toLocaleDateString()
     : null;
@@ -207,6 +211,13 @@ export default function CardModal({
         </button>
 
         <div className="modalTop">
+          {readOnly && (
+            <div className="portfolioReadOnlyBanner modalReadOnlyBanner" role="note">
+              <strong>Portfolio demo</strong>
+              <span>{portfolioReadOnlyMessage}</span>
+            </div>
+          )}
+
           <div className="cardFlipContainer">
             <div className={`cardFlipper ${isFlipped ? "flipped" : ""}`}>
               <div className="cardFront">
@@ -237,13 +248,14 @@ export default function CardModal({
             </button>
 
             <label
-              className={`uploadButton cleanUpload ${busy ? "disabled" : ""}`}
+              className={`uploadButton cleanUpload ${writeDisabled ? "disabled" : ""}`}
+              title={readOnly ? portfolioReadOnlyMessage : undefined}
             >
-              Upload
+              {readOnly ? "Upload Locked" : "Upload"}
               <input
                 type="file"
                 accept="image/*"
-                disabled={busy}
+                disabled={writeDisabled}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -280,7 +292,8 @@ export default function CardModal({
             {card.status !== "NEW" && (
               <button
                 className="secondaryButton"
-                disabled={busy}
+                disabled={writeDisabled}
+                title={readOnly ? portfolioReadOnlyMessage : undefined}
                 onClick={async () => {
                   setUndoing(true);
                   setActionError(null);
@@ -442,8 +455,10 @@ export default function CardModal({
             <button
               type="button"
               className="secondaryButton"
-              disabled={busy}
+              disabled={writeDisabled}
+              title={readOnly ? portfolioReadOnlyMessage : undefined}
               onClick={() => {
+                if (readOnly) return;
                 resetDetailsForm();
                 setActionError(null);
                 setEditingDetails((current) => !current);
@@ -1052,8 +1067,10 @@ export default function CardModal({
             <button
               type="button"
               className="secondaryButton"
-              disabled={busy}
+              disabled={writeDisabled}
+              title={readOnly ? portfolioReadOnlyMessage : undefined}
               onClick={() => {
+                if (readOnly) return;
                 setActionError(null);
                 setAddingTransaction((current) => !current);
               }}
@@ -1100,8 +1117,10 @@ export default function CardModal({
             <button
               type="button"
               className="secondaryButton"
-              disabled={busy}
+              disabled={writeDisabled}
+              title={readOnly ? portfolioReadOnlyMessage : undefined}
               onClick={() => {
+                if (readOnly) return;
                 resetValuationForm();
                 setActionError(null);
                 setEditingValuation((current) => !current);
@@ -1313,8 +1332,10 @@ export default function CardModal({
               <button
                 type="button"
                 className="dangerButton"
-                disabled={busy}
+                disabled={writeDisabled}
+                title={readOnly ? portfolioReadOnlyMessage : undefined}
                 onClick={() => {
+                  if (readOnly) return;
                   setActionError(null);
                   setConfirmingDelete(true);
                 }}

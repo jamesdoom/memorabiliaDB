@@ -4,9 +4,11 @@ import type {
   SellerTransactionImportInput,
   SellerTransactionType,
 } from "../types/card";
+import { portfolioReadOnlyMessage } from "../access";
 
 type SellerCsvImportProps = {
   onImported: () => Promise<void>;
+  readOnly?: boolean;
 };
 
 type ParsedRow = {
@@ -210,7 +212,7 @@ function formatCurrency(cents: number) {
   }).format(cents / 100);
 }
 
-function SellerCsvImport({ onImported }: SellerCsvImportProps) {
+function SellerCsvImport({ onImported, readOnly = false }: SellerCsvImportProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -273,16 +275,22 @@ function SellerCsvImport({ onImported }: SellerCsvImportProps) {
           <p className="sellerEyebrow">CSV Import</p>
           <h2 id="seller-import-title">Purchases And Sales</h2>
         </div>
-        <label className="secondaryButton sellerFilePicker">
-          Choose CSV
+        <label
+          className={`secondaryButton sellerFilePicker ${readOnly ? "disabled" : ""}`}
+          title={readOnly ? portfolioReadOnlyMessage : undefined}
+        >
+          {readOnly ? "Import Locked" : "Choose CSV"}
           <input
             ref={fileInputRef}
             type="file"
             accept=".csv,text/csv"
+            disabled={readOnly}
             onChange={handleFileChange}
           />
         </label>
       </div>
+
+      {readOnly && <p className="sellerMuted">{portfolioReadOnlyMessage}</p>}
 
       {fileName && (
         <p className="sellerMuted">
@@ -324,7 +332,7 @@ function SellerCsvImport({ onImported }: SellerCsvImportProps) {
           <button
             type="button"
             className="primaryButton sellerImportButton"
-            disabled={importing || invalidRows.length > 0}
+            disabled={readOnly || importing || invalidRows.length > 0}
             onClick={handleImport}
           >
             {importing ? "Importing..." : "Import Transactions"}

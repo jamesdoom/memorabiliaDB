@@ -362,6 +362,7 @@ Required production API environment variables:
 ```text
 PORT=
 NODE_VERSION=22
+PORTFOLIO_READ_ONLY=true
 CLIENT_ORIGINS=https://your-vercel-app.vercel.app
 DATABASE_URL=
 CLOUDINARY_CLOUD_NAME=
@@ -370,6 +371,8 @@ CLOUDINARY_API_SECRET=
 ```
 
 `CLIENT_ORIGINS` supports a comma-separated list of allowed origins, which is useful for allowing a production Vercel URL and preview URLs during staged rollout. The older `CLIENT_ORIGIN` variable is still supported for backwards compatibility.
+
+Set `PORTFOLIO_READ_ONLY=true` for the public API so recruiters can explore the dashboard without changing live demo data. Production also defaults to read-only unless `ALLOW_PUBLIC_WRITES=true` is explicitly set. If you need owner-only write access outside the public client, set `OWNER_WRITE_TOKEN` and send it as the `x-owner-write-token` request header.
 
 ### Database And Storage
 

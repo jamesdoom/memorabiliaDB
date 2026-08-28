@@ -15,9 +15,21 @@ import type {
 } from "./types/card";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+const ownerWriteToken = import.meta.env.VITE_OWNER_WRITE_TOKEN as
+  | string
+  | undefined;
 
 async function requestJson<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, options);
+  const headers = new Headers(options?.headers);
+
+  if (ownerWriteToken && options?.method && options.method !== "GET") {
+    headers.set("x-owner-write-token", ownerWriteToken);
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`;

@@ -10,6 +10,7 @@ import type {
   GradingRecommendationResponse,
   GradingSubmissionBatch,
 } from "../types/card";
+import { portfolioReadOnlyMessage } from "../access";
 
 const initialBatchForm = {
   name: "",
@@ -30,7 +31,11 @@ function formatDate(date: string | null) {
   return date ? new Date(date).toLocaleDateString() : "Not set";
 }
 
-function Grading() {
+type GradingProps = {
+  readOnly?: boolean;
+};
+
+function Grading({ readOnly = false }: GradingProps) {
   const [batches, setBatches] = useState<GradingSubmissionBatch[]>([]);
   const [recommendations, setRecommendations] = useState<
     GradingRecommendationResponse[]
@@ -76,6 +81,7 @@ function Grading() {
 
   async function handleCreateBatch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (readOnly) return;
     setSaving(true);
     setError(null);
 
@@ -102,6 +108,7 @@ function Grading() {
   }
 
   async function handleReturnBatch(batch: GradingSubmissionBatch) {
+    if (readOnly) return;
     setSaving(true);
     setError(null);
 
@@ -149,6 +156,13 @@ function Grading() {
         </div>
       </div>
 
+      {readOnly && (
+        <div className="portfolioReadOnlyBanner" role="note">
+          <strong>Portfolio demo</strong>
+          <span>{portfolioReadOnlyMessage}</span>
+        </div>
+      )}
+
       {notice && (
         <div className="successAlert" role="status">
           <span>{notice}</span>
@@ -167,7 +181,8 @@ function Grading() {
         </div>
       )}
 
-      <section className="operationsPanel">
+      {!readOnly && (
+        <section className="operationsPanel">
         <div className="sectionHeader">
           <h2>Create Submission Batch</h2>
         </div>
@@ -250,7 +265,8 @@ function Grading() {
             </button>
           </div>
         </form>
-      </section>
+        </section>
+      )}
 
       <section className="operationsPanel">
         <div className="sectionHeader">
@@ -341,6 +357,10 @@ function Grading() {
                     <button
                       type="button"
                       className="secondaryButton"
+                      disabled={readOnly}
+                      title={
+                        readOnly ? portfolioReadOnlyMessage : undefined
+                      }
                       onClick={() =>
                         setReturnBatchId((current) =>
                           current === batch.id ? null : batch.id,
@@ -423,7 +443,7 @@ function Grading() {
                         <button
                           type="button"
                           className="primaryButton"
-                          disabled={saving}
+                          disabled={readOnly || saving}
                           onClick={() => handleReturnBatch(batch)}
                         >
                           {saving ? "Saving..." : "Save returned cards"}
