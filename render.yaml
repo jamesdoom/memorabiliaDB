@@ -4,8 +4,7 @@ services:
     name: memorabilia-api
     rootDir: memorabilia-api/server
     plan: free
-    buildCommand: npm ci && npx prisma generate && npm run build
-    preDeployCommand: npx prisma migrate deploy
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:

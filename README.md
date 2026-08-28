@@ -336,14 +336,13 @@ The root `render.yaml` blueprint defines:
 - A Node web service for `memorabilia-api/server`
 - A hosted Render Postgres database
 - `DATABASE_URL` sourced from the hosted database
-- `npx prisma migrate deploy` as the pre-deploy migration step
+- `npx prisma migrate deploy` inside the build command for free-tier compatibility
 - `/health` as the API health check path
 
 Render service settings represented by the blueprint:
 
 - Root directory: `memorabilia-api/server`
-- Build command: `npm ci && npx prisma generate && npm run build`
-- Pre-deploy command: `npx prisma migrate deploy`
+- Build command: `npm ci && npx prisma generate && npx prisma migrate deploy && npm run build`
 - Start command: `npm start`
 - Health check path: `/health`
 
@@ -363,7 +362,7 @@ CLOUDINARY_API_SECRET=
 ### Database And Storage
 
 - Use hosted PostgreSQL and set `DATABASE_URL` on the API host.
-- Run Prisma migrations against the production database before starting the API. The Render blueprint does this with `npx prisma migrate deploy`.
+- Run Prisma migrations against the production database before starting the API. The Render free-tier blueprint does this during the build command with `npx prisma migrate deploy`.
 - Use Cloudinary for image storage and provide the Cloudinary credentials to the API host.
 
 ### Deployed Smoke Tests
