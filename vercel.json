@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd memorabilia-client && npm install && npm run build",
+  "outputDirectory": "memorabilia-client/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
